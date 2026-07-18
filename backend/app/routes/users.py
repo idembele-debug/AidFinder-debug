@@ -23,12 +23,12 @@ def update_profile(data: UserProfileUpdate, current_user: Utilisateur = Depends(
     return update_user_profile(db, current_user, data)
 
 
-@router.get("/theme", response_model=ThemeResponse)
+@router.get("/me/theme", response_model=ThemeResponse)
 def read_theme(current_user: Utilisateur = Depends(get_current_user)):
     return get_user_theme(current_user)
 
 
-@router.put("/theme", response_model=ThemeResponse)
+@router.patch("/me/theme", response_model=ThemeResponse)
 def change_theme(data: ThemeUpdate, current_user: Utilisateur = Depends(get_current_user), db: Session = Depends(get_db)):
     return update_user_theme(db, current_user, data)
 
