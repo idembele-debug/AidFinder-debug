@@ -2,11 +2,10 @@ import { BarChart2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import useAdminStats from '@/src/hooks/useAdminStats'
 import AdminErrorState from '@/src/components/admin/AdminErrorState'
-import AdminEmptyState from '@/src/components/admin/AdminEmptyState'
 
-function BarChartCard({ title, subtitle, items, color = '#2963E8', unit = '' }) {
+function BarChartCard({ title, subtitle, items, color = 'var(--color-brand)', unit = '' }) {
   if (!items || items.length === 0) return (
-    <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
       <h3 className="mb-1 text-base font-bold text-foreground">{title}</h3>
       {subtitle && <p className="mb-4 text-xs text-muted-foreground">{subtitle}</p>}
       <p className="py-8 text-center text-sm text-muted-foreground">Aucune donnée disponible.</p>
@@ -16,7 +15,7 @@ function BarChartCard({ title, subtitle, items, color = '#2963E8', unit = '' }) 
   const max = Math.max(1, ...items.map((i) => i.total))
 
   return (
-    <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
       <h3 className="mb-1 text-base font-bold text-foreground">{title}</h3>
       {subtitle && <p className="mb-4 text-xs text-muted-foreground">{subtitle}</p>}
       <div className="space-y-2.5">
@@ -32,7 +31,7 @@ function BarChartCard({ title, subtitle, items, color = '#2963E8', unit = '' }) 
                 }}
               >
                 {item.total > 0 && (
-                  <span className="text-[10px] font-bold text-white">{item.total}{unit}</span>
+                  <span className="text-[10px] font-bold text-brand-foreground">{item.total}{unit}</span>
                 )}
               </div>
             </div>
@@ -43,9 +42,9 @@ function BarChartCard({ title, subtitle, items, color = '#2963E8', unit = '' }) 
   )
 }
 
-function LineChartCard({ title, subtitle, items, color = '#2963E8' }) {
+function LineChartCard({ title, subtitle, items, color = 'var(--color-brand)' }) {
   if (!items || items.length === 0) return (
-    <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
       <h3 className="mb-1 text-base font-bold text-foreground">{title}</h3>
       {subtitle && <p className="mb-4 text-xs text-muted-foreground">{subtitle}</p>}
       <p className="py-8 text-center text-sm text-muted-foreground">Aucune donnée disponible.</p>
@@ -69,7 +68,7 @@ function LineChartCard({ title, subtitle, items, color = '#2963E8' }) {
   const avg = Math.round(totalSum / Math.max(1, items.length))
 
   return (
-    <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
       <div className="flex items-start justify-between mb-1">
         <h3 className="text-base font-bold text-foreground">{title}</h3>
         <div className="text-right">
@@ -90,7 +89,7 @@ function LineChartCard({ title, subtitle, items, color = '#2963E8' }) {
         <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
         {pts.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r="4" fill="white" stroke={color} strokeWidth="2" />
+            <circle cx={p.x} cy={p.y} r="4" fill="var(--color-card)" stroke={color} strokeWidth="2" />
           </g>
         ))}
       </svg>
@@ -122,7 +121,7 @@ export default function AdminStats() {
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-64 rounded-xl border border-border bg-white animate-pulse" />
+            <div key={i} className="h-64 rounded-xl border border-border bg-card animate-pulse" />
           ))}
         </div>
       </div>
@@ -145,7 +144,7 @@ export default function AdminStats() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
-            <BarChart2 className="size-6 text-[#2963E8]" />
+            <BarChart2 className="size-6 text-brand" />
             Statistiques
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -163,19 +162,19 @@ export default function AdminStats() {
           title="Évolution des utilisateurs"
           subtitle="Inscriptions sur les 30 derniers jours"
           items={stats.evolution_utilisateurs}
-          color="#2963E8"
+          color="var(--color-brand)"
         />
         <LineChartCard
           title="Évolution des conversations"
           subtitle="Discussions sur les 30 derniers jours"
           items={stats.evolution_conversations}
-          color="#10b981"
+          color="var(--color-brand)"
         />
         <LineChartCard
           title="Évolution des exports PDF"
           subtitle="Exports générés sur les 30 derniers jours"
           items={stats.evolution_exports_pdf}
-          color="#f59e0b"
+          color="var(--color-brand)"
         />
       </div>
 
@@ -185,13 +184,13 @@ export default function AdminStats() {
           title="Aides par catégorie"
           subtitle="Répartition des aides par type"
           items={stats.aides_par_categorie}
-          color="#2963E8"
+          color="var(--color-brand)"
         />
         <BarChartCard
           title="Aides par région"
           subtitle="Distribution géographique des aides"
           items={stats.aides_par_region}
-          color="#8b5cf6"
+          color="var(--color-brand)"
         />
       </div>
 
@@ -200,7 +199,7 @@ export default function AdminStats() {
         title="Sources les plus actives"
         subtitle="Classement par nombre d'aides indexées"
         items={stats.sources_les_plus_utilisees}
-        color="#f59e0b"
+        color="var(--color-brand)"
       />
     </div>
   )

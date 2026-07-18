@@ -68,14 +68,14 @@ export default function ProfileCard() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold">
             <span className="text-muted-foreground">Complétude du profil</span>
-            <span className={progressPercent === 100 ? 'text-green-600' : 'text-brand'}>
+            <span className={progressPercent === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand'}>
               {progressPercent}%
             </span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
               className={`h-full rounded-full transition-all duration-500 ease-out ${
-                progressPercent === 100 ? 'bg-green-500' : 'bg-brand'
+                progressPercent === 100 ? 'bg-emerald-500' : 'bg-brand'
               }`}
               style={{ width: `${progressPercent}%` }}
             />
@@ -86,7 +86,7 @@ export default function ProfileCard() {
         <div className="space-y-2">
           {missing.length > 0 ? (
             <>
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
                 <AlertCircle className="size-3.5" />
                 Informations manquantes :
               </span>
@@ -94,7 +94,7 @@ export default function ProfileCard() {
                 {missing.map((field) => (
                   <span
                     key={field}
-                    className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-amber-600/10 ring-inset"
+                    className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-amber-600/10 ring-inset dark:bg-amber-950 dark:text-amber-400 dark:ring-amber-500/30"
                   >
                     {field}
                   </span>
@@ -102,8 +102,8 @@ export default function ProfileCard() {
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700 ring-1 ring-green-600/10">
-              <CheckCircle2 className="size-4 shrink-0 text-green-600" />
+            <div className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/10 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-500/30">
+              <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
               Profil complet ! Vos recommandations sont optimales.
             </div>
           )}

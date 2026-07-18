@@ -7,9 +7,9 @@ import AdminErrorState from '@/src/components/admin/AdminErrorState'
 
 function FiabiliteBadge({ fiabilite }) {
   const colorMap = {
-    'haute': 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-    'moyenne': 'bg-amber-50 text-amber-700 ring-amber-600/20',
-    'faible': 'bg-red-50 text-red-700 ring-red-600/20',
+    'haute': 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-500/30',
+    'moyenne': 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-950 dark:text-amber-400 dark:ring-amber-500/30',
+    'faible': 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-950 dark:text-red-400 dark:ring-red-500/30',
   }
   const key = fiabilite?.toLowerCase() || 'faible'
   return (
@@ -22,7 +22,7 @@ function FiabiliteBadge({ fiabilite }) {
 function StatutBadge({ statut }) {
   const isOk = statut === 'actif' || statut === 'ok'
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ${isOk ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-gray-100 text-gray-600 ring-gray-300'}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ${isOk ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-500/30' : 'bg-muted text-muted-foreground ring-border'}`}>
       {isOk ? <CheckCircle className="size-3" /> : <XCircle className="size-3" />}
       {statut || '—'}
     </span>
@@ -44,7 +44,7 @@ export default function AdminSources() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
-            <Globe className="size-6 text-[#2963E8]" />
+            <Globe className="size-6 text-brand" />
             Gestion des sources
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -72,7 +72,7 @@ export default function AdminSources() {
           {sources.map((source) => (
             <div
               key={source.source_id}
-              className="rounded-xl border border-border/60 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md space-y-4"
+              className="rounded-xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md space-y-4"
             >
               {/* Header */}
               <div className="flex items-start justify-between gap-3">
@@ -83,7 +83,7 @@ export default function AdminSources() {
                       href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-[#2963E8] hover:underline truncate block mt-0.5"
+                      className="text-xs text-brand hover:underline truncate block mt-0.5"
                     >
                       {source.url}
                     </a>
@@ -119,7 +119,7 @@ export default function AdminSources() {
               <Button
                 onClick={() => runScraping(source.source_id)}
                 disabled={scrapingId === source.source_id}
-                className="w-full bg-[#2963E8] hover:bg-[#1e52c7] text-white gap-2"
+                className="w-full bg-brand hover:bg-brand-hover text-brand-foreground gap-2"
                 size="sm"
               >
                 {scrapingId === source.source_id ? (

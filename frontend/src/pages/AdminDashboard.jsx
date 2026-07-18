@@ -9,7 +9,7 @@ import AdminErrorState from '@/src/components/admin/AdminErrorState'
 
 function StatCard({ label, value, icon: Icon, colorClass, bgClass }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-white p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+    <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
       <div className={`flex size-11 shrink-0 items-center justify-center rounded-xl border ${bgClass}`}>
         <Icon className={`size-5 ${colorClass}`} />
       </div>
@@ -35,7 +35,7 @@ function BarChart({ items, label }) {
           <span className="w-32 truncate text-xs text-muted-foreground text-right">{item.label}</span>
           <div className="flex-1 h-5 rounded-full bg-muted/50 overflow-hidden">
             <div
-              className="h-full rounded-full bg-[#2963E8] transition-all duration-700"
+              className="h-full rounded-full bg-brand transition-all duration-700"
               style={{ width: `${Math.max(4, (item.total / max) * 100)}%` }}
             />
           </div>
@@ -46,7 +46,7 @@ function BarChart({ items, label }) {
   )
 }
 
-function LineChart({ items, color = '#2963E8', label }) {
+function LineChart({ items, color = 'var(--color-brand)', label }) {
   if (!items || items.length === 0) return (
     <p className="py-8 text-center text-sm text-muted-foreground">Aucune donnée disponible.</p>
   )
@@ -126,57 +126,57 @@ export default function AdminDashboard() {
       label: 'Utilisateurs',
       value: data?.total_utilisateurs,
       icon: Users,
-      colorClass: 'text-blue-600',
-      bgClass: 'bg-blue-50 border-blue-100',
+      colorClass: 'text-blue-600 dark:text-blue-400',
+      bgClass: 'bg-blue-50 border-blue-100 dark:bg-blue-950 dark:border-blue-900',
     },
     {
       label: 'Aides publiées',
       value: data?.total_aides,
       icon: FileText,
-      colorClass: 'text-emerald-600',
-      bgClass: 'bg-emerald-50 border-emerald-100',
+      colorClass: 'text-emerald-600 dark:text-emerald-400',
+      bgClass: 'bg-emerald-50 border-emerald-100 dark:bg-emerald-950 dark:border-emerald-900',
     },
     {
       label: 'Catégories',
       value: data?.total_categories,
       icon: FolderOpen,
-      colorClass: 'text-violet-600',
-      bgClass: 'bg-violet-50 border-violet-100',
+      colorClass: 'text-violet-600 dark:text-violet-400',
+      bgClass: 'bg-violet-50 border-violet-100 dark:bg-violet-950 dark:border-violet-900',
     },
     {
       label: 'Sources',
       value: data?.total_sources,
       icon: Globe,
-      colorClass: 'text-sky-600',
-      bgClass: 'bg-sky-50 border-sky-100',
+      colorClass: 'text-sky-600 dark:text-sky-400',
+      bgClass: 'bg-sky-50 border-sky-100 dark:bg-sky-950 dark:border-sky-900',
     },
     {
       label: 'Conversations',
       value: data?.total_conversations,
       icon: MessageSquare,
-      colorClass: 'text-orange-600',
-      bgClass: 'bg-orange-50 border-orange-100',
+      colorClass: 'text-orange-600 dark:text-orange-400',
+      bgClass: 'bg-orange-50 border-orange-100 dark:bg-orange-950 dark:border-orange-900',
     },
     {
       label: 'PDF exportés',
       value: data?.total_pdf_exportes,
       icon: Download,
-      colorClass: 'text-pink-600',
-      bgClass: 'bg-pink-50 border-pink-100',
+      colorClass: 'text-pink-600 dark:text-pink-400',
+      bgClass: 'bg-pink-50 border-pink-100 dark:bg-pink-950 dark:border-pink-900',
     },
     {
       label: 'Comptes actifs',
       value: data?.comptes_actifs,
       icon: UserCheck,
-      colorClass: 'text-green-600',
-      bgClass: 'bg-green-50 border-green-100',
+      colorClass: 'text-green-600 dark:text-green-400',
+      bgClass: 'bg-green-50 border-green-100 dark:bg-green-950 dark:border-green-900',
     },
     {
       label: 'Comptes désactivés',
       value: data?.comptes_desactives,
       icon: UserX,
-      colorClass: 'text-red-600',
-      bgClass: 'bg-red-50 border-red-100',
+      colorClass: 'text-red-600 dark:text-red-400',
+      bgClass: 'bg-red-50 border-red-100 dark:bg-red-950 dark:border-red-900',
     },
   ]
 
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
         </div>
         <button
           onClick={refresh}
-          className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted/50 transition-colors"
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted/50 transition-colors"
         >
           <RefreshCw className="size-4" />
           <span className="hidden sm:inline">Actualiser</span>
@@ -210,37 +210,37 @@ export default function AdminDashboard() {
       {!statsLoading && stats && (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Aides par catégorie */}
-          <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold text-foreground">Aides par catégorie</h3>
             <BarChart items={stats.aides_par_categorie} label="categories" />
           </div>
 
           {/* Aides par région */}
-          <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold text-foreground">Aides par région</h3>
             <BarChart items={stats.aides_par_region} label="regions" />
           </div>
 
           {/* Évolution utilisateurs */}
-          <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-1 text-base font-bold text-foreground">
               Évolution des utilisateurs
             </h3>
             <p className="mb-4 text-xs text-muted-foreground">30 derniers jours</p>
-            <LineChart items={stats.evolution_utilisateurs} color="#2963E8" label="users" />
+            <LineChart items={stats.evolution_utilisateurs} color="var(--color-brand)" label="users" />
           </div>
 
           {/* Évolution conversations */}
-          <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-1 text-base font-bold text-foreground">
               Évolution des conversations
             </h3>
             <p className="mb-4 text-xs text-muted-foreground">30 derniers jours</p>
-            <LineChart items={stats.evolution_conversations} color="#10b981" label="conversations" />
+            <LineChart items={stats.evolution_conversations} color="var(--color-brand)" label="conversations" />
           </div>
 
           {/* Sources les plus utilisées */}
-          <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm lg:col-span-2">
+          <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm lg:col-span-2">
             <h3 className="mb-4 text-base font-bold text-foreground">Sources les plus utilisées</h3>
             <BarChart items={stats.sources_les_plus_utilisees} label="sources" />
           </div>

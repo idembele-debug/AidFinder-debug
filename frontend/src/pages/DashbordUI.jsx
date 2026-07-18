@@ -63,7 +63,7 @@ export default function DashbordUI() {
         <p className="mt-2 text-sm text-muted-foreground max-w-sm">
           Impossible de se connecter au serveur backend. Veuillez vérifier que le serveur est démarré.
         </p>
-        <Button onClick={refresh} className="mt-4 bg-[#2963E8] hover:bg-[#1e52c7] text-white">
+        <Button onClick={refresh} className="mt-4 bg-brand hover:bg-brand-hover text-brand-foreground">
           Réessayer
         </Button>
       </div>

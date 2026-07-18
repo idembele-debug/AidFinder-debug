@@ -80,7 +80,7 @@ export default function ChangePassword() {
                 </div>
               )}
               {success && (
-                <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+                <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
                   {success}
                 </div>
               )}
@@ -123,7 +123,7 @@ export default function ChangePassword() {
 
               <Button
                 type="submit"
-                className="w-full bg-[#2963E8] hover:bg-[#1e52c7]"
+                className="w-full bg-brand hover:bg-brand-hover text-brand-foreground"
                 disabled={loading}
               >
                 {loading ? 'Enregistrement...' : 'Enregistrer la modification'}

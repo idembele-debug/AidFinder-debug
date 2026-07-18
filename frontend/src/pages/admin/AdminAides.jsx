@@ -22,8 +22,8 @@ function AideBadge({ active }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
         active
-          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20'
-          : 'bg-red-50 text-red-700 ring-1 ring-red-600/20'
+          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-500/30'
+          : 'bg-red-50 text-red-700 ring-1 ring-red-600/20 dark:bg-red-950 dark:text-red-400 dark:ring-red-500/30'
       }`}
     >
       <span className={`size-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-red-500'}`} />
@@ -111,13 +111,13 @@ function AideFormModal({ aide, onClose, onSave, creating = false, viewOnly = fal
   }
 
   const inputClass =
-    'w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-[#2963E8] focus:ring-2 focus:ring-[#2963E8]/20 transition-all'
+    'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all'
   const labelClass = 'block text-xs font-semibold text-muted-foreground mb-1'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl"
+        className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header fixe */}
@@ -229,7 +229,7 @@ function AideFormModal({ aide, onClose, onSave, creating = false, viewOnly = fal
                   id="est_active"
                   checked={form.est_active}
                   onChange={set('est_active')}
-                  className="size-4 rounded border-border accent-[#2963E8]"
+                  className="size-4 rounded border-border accent-brand"
                   disabled={viewOnly}
                 />
                 <label htmlFor="est_active" className="text-sm text-foreground cursor-pointer">
@@ -242,7 +242,7 @@ function AideFormModal({ aide, onClose, onSave, creating = false, viewOnly = fal
           {/* Footer fixe */}
           <div className="border-t border-border/60 px-6 py-4 flex justify-end gap-3 shrink-0">
             {viewOnly ? (
-              <Button type="button" onClick={onClose} className="bg-[#2963E8] hover:bg-[#1e52c7] text-white">
+              <Button type="button" onClick={onClose} className="bg-brand hover:bg-brand-hover text-brand-foreground">
                 Fermer
               </Button>
             ) : (
@@ -253,7 +253,7 @@ function AideFormModal({ aide, onClose, onSave, creating = false, viewOnly = fal
                 <Button
                   type="submit"
                   disabled={saving}
-                  className="gap-2 bg-[#2963E8] hover:bg-[#1e52c7] text-white"
+                  className="gap-2 bg-brand hover:bg-brand-hover text-brand-foreground"
                 >
                   {saving ? <RefreshCw className="size-4 animate-spin" /> : <Save className="size-4" />}
                   {creating ? 'Créer' : 'Enregistrer'}
@@ -353,7 +353,7 @@ export default function AdminAides() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
-            <FileText className="size-6 text-[#2963E8]" />
+            <FileText className="size-6 text-brand" />
             Gestion des aides
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -367,7 +367,7 @@ export default function AdminAides() {
           <Button
             onClick={() => setShowCreate(true)}
             size="sm"
-            className="gap-2 bg-[#2963E8] hover:bg-[#1e52c7] text-white"
+            className="gap-2 bg-brand hover:bg-brand-hover text-brand-foreground"
           >
             <Plus className="size-4" /> Créer une aide
           </Button>
@@ -383,13 +383,13 @@ export default function AdminAides() {
             placeholder="Titre, source..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="w-full rounded-lg border border-border bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[#2963E8] focus:ring-2 focus:ring-[#2963E8]/20 transition-all"
+            className="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
           />
         </div>
         <select
           value={filterCategorie}
           onChange={(e) => { setFilterCategorie(e.target.value); setPage(1) }}
-          className="rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none focus:border-[#2963E8] focus:ring-2 focus:ring-[#2963E8]/20 transition-all"
+          className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
         >
           <option value="">Toutes catégories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -397,7 +397,7 @@ export default function AdminAides() {
         <select
           value={filterRegion}
           onChange={(e) => { setFilterRegion(e.target.value); setPage(1) }}
-          className="rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none focus:border-[#2963E8] focus:ring-2 focus:ring-[#2963E8]/20 transition-all"
+          className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
         >
           <option value="">Toutes régions</option>
           {regions.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -417,7 +417,7 @@ export default function AdminAides() {
         />
       ) : (
         <>
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
             {/* Desktop */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-sm">
@@ -451,7 +451,7 @@ export default function AdminAides() {
                       <td className="px-4 py-3 text-muted-foreground text-xs">{aide.source || '—'}</td>
                       <td className="px-4 py-3 text-xs">
                         {(aide.categorie || aide.type_aide) ? (
-                          <span className="rounded-md bg-[#2963E8]/10 px-2 py-1 font-semibold text-[#2963E8]">
+                          <span className="rounded-md bg-brand-light px-2 py-1 font-semibold text-brand">
                             {aide.categorie || aide.type_aide}
                           </span>
                         ) : '—'}
@@ -466,7 +466,7 @@ export default function AdminAides() {
                           <Button
                             variant="ghost" size="icon"
                             onClick={() => setViewAide(aide)}
-                            className="size-8 text-muted-foreground hover:text-[#2963E8] hover:bg-[#2963E8]/10"
+                            className="size-8 text-muted-foreground hover:text-brand hover:bg-brand-light"
                             title="Voir"
                           >
                             <Eye className="size-4" />
@@ -506,7 +506,7 @@ export default function AdminAides() {
                       <div className="flex flex-wrap gap-1.5 mt-1.5">
                         <AideBadge active={aide.est_active !== false} />
                         {(aide.categorie || aide.type_aide) && (
-                          <span className="rounded-md bg-[#2963E8]/10 px-2 py-0.5 text-[10px] font-semibold text-[#2963E8]">
+                          <span className="rounded-md bg-brand-light px-2 py-0.5 text-[10px] font-semibold text-brand">
                             {aide.categorie || aide.type_aide}
                           </span>
                         )}
@@ -514,10 +514,10 @@ export default function AdminAides() {
                     </div>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setViewAide(aide)} className="text-[#2963E8] border-[#2963E8]/20 hover:bg-[#2963E8]/10 text-xs gap-1">
+                    <Button variant="outline" size="sm" onClick={() => setViewAide(aide)} className="text-brand border-brand-border hover:bg-brand-light text-xs gap-1">
                       <Eye className="size-3" /> Voir
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(aide)} disabled={actionLoading === aide.aide_id} className="text-destructive border-red-200 hover:bg-red-50 text-xs">
+                    <Button variant="outline" size="sm" onClick={() => handleDelete(aide)} disabled={actionLoading === aide.aide_id} className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs">
                       Supprimer
                     </Button>
                   </div>

@@ -7,8 +7,8 @@ export default function AdminEmptyState({ icon: Icon, title, description, action
   return (
     <div className={cn('flex flex-col items-center justify-center py-16 text-center', className)}>
       {Icon && (
-        <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-[#2963E8]/10">
-          <Icon className="size-8 text-[#2963E8]" />
+        <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-brand-light">
+          <Icon className="size-8 text-brand" />
         </div>
       )}
       <h3 className="text-base font-bold text-foreground">{title}</h3>

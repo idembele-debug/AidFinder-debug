@@ -295,7 +295,7 @@ export default function Home() {
       </section>
 
       {/* 6 — Statistiques */}
-      <section className="border-y border-border/60 bg-[#1a2332] py-16 text-white md:py-20">
+      <section className="border-y border-border/60 bg-[#1a2332] dark:bg-[#0d1117] py-16 text-white md:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             badge="En chiffres"

@@ -29,7 +29,7 @@ function UserAvatar({ user }) {
     )
   }
   return (
-    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#2963E8]/10 text-sm font-bold text-[#2963E8] border border-[#2963E8]/20">
+    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-sm font-bold text-brand border border-brand-border">
       {initials}
     </div>
   )
@@ -41,8 +41,8 @@ function StatusBadge({ status }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
         isSuspended
-          ? 'bg-red-50 text-red-700 ring-1 ring-red-600/20'
-          : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20'
+          ? 'bg-red-50 text-red-700 ring-1 ring-red-600/20 dark:bg-red-950 dark:text-red-400 dark:ring-red-500/30'
+          : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-500/30'
       }`}
     >
       <span className={`size-1.5 rounded-full ${isSuspended ? 'bg-red-500' : 'bg-emerald-500'}`} />
@@ -88,7 +88,7 @@ function UserDetailModal({ user, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[90vh]"
+        className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -143,15 +143,15 @@ function UserDetailModal({ user, onClose }) {
             </div>
             {isSuspended && (
               <>
-                <div className="rounded-lg bg-red-50 p-3 border border-red-100">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-red-600">Date de suspension</p>
-                  <p className="mt-0.5 font-semibold text-red-700">
+                <div className="rounded-lg bg-destructive/10 p-3 border border-destructive/20">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-destructive">Date de suspension</p>
+                  <p className="mt-0.5 font-semibold text-destructive">
                     {dateSuspension ? formatLocalDate(dateSuspension) : '—'}
                   </p>
                 </div>
-                <div className="rounded-lg bg-red-50 p-3 border border-red-100">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-red-600">Réactivation prévue</p>
-                  <p className="mt-0.5 font-semibold text-red-700">
+                <div className="rounded-lg bg-destructive/10 p-3 border border-destructive/20">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-destructive">Réactivation prévue</p>
+                  <p className="mt-0.5 font-semibold text-destructive">
                     {user.date_fin_suspension ? formatLocalDate(user.date_fin_suspension) : '—'}
                   </p>
                 </div>
@@ -195,13 +195,13 @@ function WarningModal({ user, onClose, onConfirm }) {
   }
 
   const inputClass =
-    'w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-[#2963E8] focus:ring-2 focus:ring-[#2963E8]/20 transition-all'
+    'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all'
   const labelClass = 'block text-xs font-semibold text-muted-foreground mb-1'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4"
+        className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -211,7 +211,7 @@ function WarningModal({ user, onClose, onConfirm }) {
           </button>
         </div>
 
-        <div className="rounded-lg bg-yellow-50 border border-yellow-100 p-3 text-xs text-yellow-800">
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 dark:bg-amber-950 dark:border-amber-500/30 dark:text-amber-400">
           Avertir cet utilisateur entraînera l'envoi d'un e-mail d'avertissement. Au bout de 2 avertissements, le compte sera automatiquement suspendu pour 15 jours.
         </div>
 
@@ -252,7 +252,7 @@ function WarningModal({ user, onClose, onConfirm }) {
             <Button
               type="submit"
               disabled={submitting || !motif.trim() || !discussionId}
-              className="gap-2 bg-yellow-600 hover:bg-yellow-700 text-white"
+              className="gap-2 bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-700 dark:hover:bg-amber-600"
             >
               {submitting && <RefreshCw className="size-4 animate-spin" />}
               Confirmer
@@ -309,7 +309,7 @@ export default function AdminUsers() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
-            <Users className="size-6 text-[#2963E8]" />
+            <Users className="size-6 text-brand" />
             Gestion des utilisateurs
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -329,7 +329,7 @@ export default function AdminUsers() {
           placeholder="Rechercher par nom ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-border bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[#2963E8] focus:ring-2 focus:ring-[#2963E8]/20 transition-all"
+          className="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
         />
       </div>
 
@@ -345,7 +345,7 @@ export default function AdminUsers() {
           description={search ? 'Aucun résultat pour cette recherche.' : 'Aucun utilisateur enregistré.'}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border/60 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
           {/* Vue desktop */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
@@ -379,7 +379,7 @@ export default function AdminUsers() {
                         <Button
                           variant="ghost" size="icon"
                           onClick={() => setViewUser(user)}
-                          className="size-8 text-muted-foreground hover:text-[#2963E8] hover:bg-[#2963E8]/10"
+                          className="size-8 text-muted-foreground hover:text-brand hover:bg-brand-light"
                           title="Voir"
                         >
                           <Eye className="size-4" />
@@ -387,7 +387,7 @@ export default function AdminUsers() {
                         <Button
                           variant="ghost" size="icon"
                           onClick={() => setWarnUser(user)}
-                          className="size-8 text-muted-foreground hover:text-yellow-600 hover:bg-yellow-50"
+                          className="size-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-950/50"
                           title="Avertir"
                         >
                           <AlertTriangle className="size-4" />
@@ -423,10 +423,10 @@ export default function AdminUsers() {
                 <p className="text-xs text-muted-foreground">Inscrit le {formatLocalDate(user.date_creation)}</p>
 
                 <div className="flex flex-wrap items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => setViewUser(user)} className="size-8 hover:text-[#2963E8]">
+                  <Button variant="ghost" size="icon" onClick={() => setViewUser(user)} className="size-8 hover:text-brand">
                     <Eye className="size-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setWarnUser(user)} className="size-8 hover:text-yellow-600">
+                  <Button variant="ghost" size="icon" onClick={() => setWarnUser(user)} className="size-8 hover:text-amber-600 dark:hover:text-amber-400">
                     <AlertTriangle className="size-4" />
                   </Button>
                 </div>

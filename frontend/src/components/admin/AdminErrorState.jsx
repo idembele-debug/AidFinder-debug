@@ -15,7 +15,7 @@ export default function AdminErrorState({ title = 'Erreur de chargement', descri
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
       )}
       {onRetry && (
-        <Button onClick={onRetry} className="mt-6 bg-[#2963E8] hover:bg-[#1e52c7] text-white">
+        <Button onClick={onRetry} className="mt-6 bg-brand hover:bg-brand-hover text-brand-foreground">
           <RefreshCw className="mr-2 size-4" />
           Réessayer
         </Button>
