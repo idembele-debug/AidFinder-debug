@@ -23,7 +23,7 @@ function StatCard({ label, value, icon: Icon, colorClass, bgClass }) {
   )
 }
 
-function BarChart({ items, label }) {
+function BarChart({ items, label, color = 'var(--color-brand)' }) {
   if (!items || items.length === 0) return (
     <p className="py-8 text-center text-sm text-muted-foreground">Aucune donnée disponible.</p>
   )
@@ -34,10 +34,10 @@ function BarChart({ items, label }) {
         <div key={item.label} className="flex items-center gap-3">
           <span className="w-32 truncate text-xs text-muted-foreground text-right">{item.label}</span>
           <div className="flex-1 h-5 rounded-full bg-muted/50 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-brand transition-all duration-700"
-              style={{ width: `${Math.max(4, (item.total / max) * 100)}%` }}
-            />
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.max(4, (item.total / max) * 100)}%`, backgroundColor: color }}
+              />
           </div>
           <span className="w-8 text-xs font-bold text-foreground text-right">{item.total}</span>
         </div>
@@ -212,13 +212,13 @@ export default function AdminDashboard() {
           {/* Aides par catégorie */}
           <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold text-foreground">Aides par catégorie</h3>
-            <BarChart items={stats.aides_par_categorie} label="categories" />
+            <BarChart items={stats.aides_par_categorie} label="categories" color="#10b981" />
           </div>
 
           {/* Aides par région */}
           <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold text-foreground">Aides par région</h3>
-            <BarChart items={stats.aides_par_region} label="regions" />
+            <BarChart items={stats.aides_par_region} label="regions" color="#0ea5e9" />
           </div>
 
           {/* Évolution utilisateurs */}
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
           {/* Sources les plus utilisées */}
           <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm lg:col-span-2">
             <h3 className="mb-4 text-base font-bold text-foreground">Sources les plus utilisées</h3>
-            <BarChart items={stats.sources_les_plus_utilisees} label="sources" />
+            <BarChart items={stats.sources_les_plus_utilisees} label="sources" color="#a855f7" />
           </div>
         </div>
       )}

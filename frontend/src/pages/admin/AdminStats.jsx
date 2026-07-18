@@ -184,13 +184,13 @@ export default function AdminStats() {
           title="Aides par catégorie"
           subtitle="Répartition des aides par type"
           items={stats.aides_par_categorie}
-          color="var(--color-brand)"
+          color="#10b981"
         />
         <BarChartCard
           title="Aides par région"
           subtitle="Distribution géographique des aides"
           items={stats.aides_par_region}
-          color="var(--color-brand)"
+          color="#0ea5e9"
         />
       </div>
 
@@ -199,7 +199,7 @@ export default function AdminStats() {
         title="Sources les plus actives"
         subtitle="Classement par nombre d'aides indexées"
         items={stats.sources_les_plus_utilisees}
-        color="var(--color-brand)"
+        color="#a855f7"
       />
     </div>
   )
