@@ -29,7 +29,7 @@ export default function AidesRecommandeesPage() {
         <p className="mt-2 text-sm text-muted-foreground max-w-sm">
           Impossible de récupérer vos recommandations d'aides. Veuillez réessayer.
         </p>
-        <Button onClick={refresh} className="mt-4 bg-[#2963E8] hover:bg-[#1e52c7] text-white">
+        <Button onClick={refresh} className="mt-4 bg-brand hover:bg-brand-hover text-brand-foreground">
           <RefreshCw className="mr-2 size-4" /> Réessayer
         </Button>
       </div>

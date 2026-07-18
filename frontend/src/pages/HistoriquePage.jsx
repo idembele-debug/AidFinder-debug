@@ -75,7 +75,7 @@ export default function HistoriquePage() {
         <p className="mt-2 text-sm text-muted-foreground max-w-sm">
           Impossible de récupérer l'historique de vos discussions. Veuillez réessayer.
         </p>
-        <Button onClick={fetchHistory} className="mt-4 bg-[#2963E8] hover:bg-[#1e52c7] text-white">
+        <Button onClick={fetchHistory} className="mt-4 bg-brand hover:bg-brand-hover text-brand-foreground">
           <RefreshCw className="mr-2 size-4" /> Réessayer
         </Button>
       </div>
@@ -86,7 +86,7 @@ export default function HistoriquePage() {
     <div className="flex-1 px-4 py-6 sm:px-8 sm:py-8 space-y-6">
       <div className="border-b border-border/60 pb-4">
         <h1 className="flex items-center gap-2 text-xl font-bold text-foreground sm:text-2xl">
-          <MessageSquare className="size-6 text-[#2963E8]" />
+          <MessageSquare className="size-6 text-brand" />
           Historique des discussions
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -106,13 +106,13 @@ export default function HistoriquePage() {
             <div
               key={conv.historique_id}
               onClick={() => handleRowClick(conv.historique_id)}
-              className="group cursor-pointer rounded-xl border border-border/60 bg-white p-4 shadow-xs transition-all duration-300 hover:border-border hover:shadow-md hover:bg-muted/10"
+              className="group cursor-pointer rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all duration-300 hover:border-border hover:shadow-md hover:bg-muted/10"
             >
               {/* Layout : conteneur principal sans overflow caché */}
               <div className="flex items-start gap-3">
                 {/* Contenu textuel — min-w-0 garantit que truncate fonctionne */}
                 <div className="min-w-0 flex-1 space-y-1">
-                  <h4 className="truncate text-sm font-bold text-foreground group-hover:text-[#2963E8] transition-colors duration-200">
+                  <h4 className="truncate text-sm font-bold text-foreground group-hover:text-brand transition-colors duration-200">
                     {conv.titre_resume || 'Discussion sans titre'}
                   </h4>
 
