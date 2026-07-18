@@ -184,7 +184,7 @@ export default function ProfileCompletionDialog() {
 
           <Button
             type="submit"
-            className="w-full bg-[#2963E8] hover:bg-[#1e52c7]"
+            className="w-full bg-brand hover:bg-brand-hover text-brand-foreground"
             disabled={submitting}
           >
             {submitting ? 'Enregistrement...' : 'Continuer'}

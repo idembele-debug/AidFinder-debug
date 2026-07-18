@@ -16,7 +16,7 @@ export default function DashboardShell({
   const closeSidebar = () => setSidebarOpen(false)
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-background">
       {dialog}
 
       {sidebarOpen && (
@@ -29,13 +29,13 @@ export default function DashboardShell({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-[#1a2332] transition-transform duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-sidebar transition-transform duration-300 lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex h-16 items-center justify-between px-5 lg:hidden">
           <Logo linkTo={basePath} />
-          <button type="button" onClick={closeSidebar} className="text-white" aria-label="Fermer">
+          <button type="button" onClick={closeSidebar} className="text-sidebar-foreground" aria-label="Fermer">
             <X className="size-5" />
           </button>
         </div>

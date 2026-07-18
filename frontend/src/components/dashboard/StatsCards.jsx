@@ -39,25 +39,25 @@ export default function StatsCards({
       title: 'Recherches effectuées',
       value: recherches,
       icon: Search,
-      color: 'text-blue-600 bg-blue-50 border-blue-100',
+      color: 'text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800',
     },
     {
       title: 'Conversations',
       value: conversations,
       icon: MessageSquare,
-      color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800',
     },
     {
       title: 'Aides recommandées',
       value: recommandations,
       icon: Sparkles,
-      color: 'text-amber-600 bg-amber-50 border-amber-100',
+      color: 'text-amber-600 bg-amber-50 border-amber-100 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800',
     },
     {
       title: 'PDF exportés',
       value: pdfExportes,
       icon: FileText,
-      color: 'text-purple-600 bg-purple-50 border-purple-100',
+      color: 'text-purple-600 bg-purple-50 border-purple-100 dark:text-purple-400 dark:bg-purple-950/30 dark:border-purple-800',
     },
   ]
 
@@ -66,7 +66,7 @@ export default function StatsCards({
       {cards.map((card) => {
         const Icon = card.icon
         return (
-          <Card key={card.title} className="border-border/60 bg-white shadow-xs transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+          <Card key={card.title} className="border-border/60 bg-card shadow-xs transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
             <CardContent className="flex items-center gap-4 p-5">
               <div className={`flex size-11 items-center justify-center rounded-xl border ${card.color} shrink-0`}>
                 <Icon className="size-5" />

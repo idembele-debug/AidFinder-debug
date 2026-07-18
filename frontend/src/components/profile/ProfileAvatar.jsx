@@ -9,14 +9,14 @@ export default function ProfileAvatar({ photoPath, name, className }) {
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#2963E8]/20 to-[#2963E8]/5 ring-2 ring-[#2963E8]/20',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-light to-brand-lighter ring-2 ring-brand-border',
         className
       )}
     >
       {photoUrl ? (
         <img src={photoUrl} alt={name ? `Photo de ${name}` : 'Photo de profil'} className="size-full object-cover" />
       ) : (
-        <User className="size-1/2 text-[#2963E8]" />
+        <User className="size-1/2 text-brand" />
       )}
     </div>
   )

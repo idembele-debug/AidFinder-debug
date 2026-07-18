@@ -20,7 +20,7 @@ export default function SidebarNavItem({ to, end = false, children, onClick, dis
       <span
         className={cn(
           baseClass,
-          'cursor-default bg-transparent text-white/50'
+          'cursor-default bg-transparent text-sidebar-foreground/50'
         )}
       >
         {content}
@@ -37,8 +37,8 @@ export default function SidebarNavItem({ to, end = false, children, onClick, dis
         cn(
           baseClass,
           isActive
-            ? 'bg-[#2963E8] text-white'
-            : 'bg-transparent text-white/90 hover:bg-[#2963E8] hover:text-white'
+            ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+            : 'bg-transparent text-sidebar-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground'
         )
       }
     >

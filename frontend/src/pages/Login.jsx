@@ -80,7 +80,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full bg-[#2963E8] hover:bg-[#1e52c7]"
+              className="w-full bg-brand hover:bg-brand-hover text-brand-foreground"
               disabled={loading}
             >
               {loading ? 'Connexion...' : 'Se connecter'}
@@ -89,7 +89,7 @@ export default function Login() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Pas encore de compte ?{' '}
-            <Link to="/register" className="font-medium text-[#2963E8] hover:underline">
+            <Link to="/register" className="font-medium text-brand hover:underline">
               S&apos;inscrire
             </Link>
           </p>

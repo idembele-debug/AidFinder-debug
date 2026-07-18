@@ -42,14 +42,14 @@ export default function ChatInput({ onSend, value = '', onChange, disabled = fal
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <div className="flex items-end gap-2 rounded-2xl border border-border/80 bg-white px-4 py-3 shadow-sm transition-shadow focus-within:border-[#2963E8]/60 focus-within:shadow-md">
+      <div className="flex items-end gap-2 rounded-2xl border border-border/80 bg-background px-4 py-3 shadow-sm transition-shadow focus-within:border-brand/60 focus-within:shadow-md">
         {/* Bouton Nouveau Chat */}
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={handleNewChat}
-          className="mb-0.5 shrink-0 size-8 text-muted-foreground hover:text-[#2963E8] hover:bg-[#2963E8]/10"
+          className="mb-0.5 shrink-0 size-8 text-muted-foreground hover:text-brand hover:bg-brand-light"
           aria-label="Nouvelle discussion"
           title="Nouvelle discussion"
         >
@@ -75,7 +75,7 @@ export default function ChatInput({ onSend, value = '', onChange, disabled = fal
           type="button"
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
-          className="mb-0.5 shrink-0 size-8 rounded-xl bg-[#2963E8] text-white shadow-none hover:bg-[#1e52c7] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          className="mb-0.5 shrink-0 size-8 rounded-xl bg-brand text-brand-foreground shadow-none hover:bg-brand-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           size="icon"
           aria-label="Envoyer le message"
           id="chat-send-btn"

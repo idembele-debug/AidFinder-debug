@@ -11,7 +11,7 @@ export default function QuickActions({ onStartChat }) {
       icon: MessageSquarePlus,
       onClick: onStartChat,
       variant: 'default',
-      className: 'bg-[#2963E8] hover:bg-[#1e52c7] text-white',
+      className: 'bg-brand hover:bg-brand-hover text-brand-foreground',
     },
     {
       label: 'Modifier le profil',
@@ -24,7 +24,7 @@ export default function QuickActions({ onStartChat }) {
   ]
 
   return (
-    <Card className="border-border/60 bg-white shadow-xs">
+    <Card className="border-border/60 bg-card shadow-xs">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
           <Zap className="size-5 text-amber-500" />

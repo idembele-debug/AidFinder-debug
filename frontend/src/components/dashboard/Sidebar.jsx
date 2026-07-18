@@ -60,8 +60,8 @@ export default function Sidebar({ basePath = '/dashboard', onDeactivate, onNavig
             onNavigate?.()
           }}
           className={cn(
-            'block w-full rounded-lg bg-transparent px-3 py-2.5 text-left text-sm text-white/90',
-            'transition-all duration-200 hover:bg-[#2963E8] hover:text-white'
+            'block w-full rounded-lg bg-transparent px-3 py-2.5 text-left text-sm text-sidebar-foreground',
+            'transition-all duration-200 hover:bg-sidebar-primary hover:text-sidebar-primary-foreground'
           )}
         >
           Désactivation du compte

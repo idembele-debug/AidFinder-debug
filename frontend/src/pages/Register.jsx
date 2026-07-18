@@ -116,7 +116,7 @@ export default function Register() {
 
             <Button
               type="submit"
-              className="w-full bg-[#2963E8] hover:bg-[#1e52c7]"
+              className="w-full bg-brand hover:bg-brand-hover text-brand-foreground"
               disabled={loading}
             >
               {loading ? 'Création en cours...' : "S'inscrire"}
@@ -125,7 +125,7 @@ export default function Register() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Déjà un compte ?{' '}
-            <Link to="/login" className="font-medium text-[#2963E8] hover:underline">
+            <Link to="/login" className="font-medium text-brand hover:underline">
               Se connecter
             </Link>
           </p>

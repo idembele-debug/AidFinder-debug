@@ -55,7 +55,7 @@ export default function RecentAidsSection({ recentAids = [] }) {
         return (
           <Card
             key={aid.aide_id}
-            className="border-border/60 bg-white shadow-xs transition-all duration-200 hover:border-border hover:bg-muted/30"
+            className="border-border/60 bg-card shadow-xs transition-all duration-200 hover:border-border hover:bg-muted/30"
           >
             <CardContent className="flex items-center gap-3 p-3">
               {/* Thumbnail */}
@@ -68,7 +68,7 @@ export default function RecentAidsSection({ recentAids = [] }) {
                 <h4 className="truncate text-xs font-bold text-foreground">{aid.titre}</h4>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
                   {categoryName && (
-                    <span className="font-semibold text-[#2963E8]">{categoryName}</span>
+                    <span className="font-semibold text-brand">{categoryName}</span>
                   )}
                   {aid.date_consultation && (
                     <span>• Consulté le {formatDate(aid.date_consultation)}</span>
@@ -81,7 +81,7 @@ export default function RecentAidsSection({ recentAids = [] }) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleConsult(aid)}
-                className="shrink-0 h-8 text-[11px] font-semibold text-[#2963E8] border-[#2963E8]/20 hover:bg-[#2963E8]/10 hover:border-[#2963E8] transition-colors duration-200"
+                className="shrink-0 h-8 text-[11px] font-semibold text-brand border-brand-border hover:bg-brand-light hover:border-brand transition-colors duration-200"
                 disabled={!aid.url_officielle}
               >
                 Consulter

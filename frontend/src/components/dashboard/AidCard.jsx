@@ -14,13 +14,13 @@ function CompatibilityCard({ score, raisons }) {
 
   const pct = Math.min(100, Math.max(0, score))
   
-  let badgeColor = 'text-red-700 bg-red-50 ring-red-600/20'
-  let barColor = 'bg-red-400'
+  let badgeColor = 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/50 ring-red-600/20 dark:ring-red-400/30'
+  let barColor = 'bg-red-400 dark:bg-red-500'
   if (pct >= 80) {
-    badgeColor = 'text-emerald-700 bg-emerald-50 ring-emerald-600/20'
+    badgeColor = 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 ring-emerald-600/20 dark:ring-emerald-400/30'
     barColor = 'bg-emerald-500'
   } else if (pct >= 50) {
-    badgeColor = 'text-amber-700 bg-amber-50 ring-amber-600/20'
+    badgeColor = 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 ring-amber-600/20 dark:ring-amber-400/30'
     barColor = 'bg-amber-500'
   }
 
@@ -57,7 +57,7 @@ function CompatibilityCard({ score, raisons }) {
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-0.5 text-[10px] font-bold text-[#2963E8] hover:text-[#1e52c7] transition-colors outline-none"
+            className="flex items-center gap-0.5 text-[10px] font-bold text-brand hover:text-brand-hover transition-colors outline-none"
           >
             Pourquoi ?
             {isOpen ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
@@ -132,7 +132,7 @@ export default function AidCard({ aid, index = 0, historiqueId = null, onShowDet
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut', delay: index * 0.08 }}
     >
-      <Card className="group flex flex-col overflow-hidden border-border/50 bg-white shadow-xs transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+      <Card className="group flex flex-col overflow-hidden border-border/50 bg-card shadow-xs transition-all duration-300 hover:shadow-md hover:-translate-y-1">
         {/* Image Section */}
         <div className="relative h-36 w-full overflow-hidden bg-muted">
           <img
@@ -142,7 +142,7 @@ export default function AidCard({ aid, index = 0, historiqueId = null, onShowDet
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           {aid.type_aide && (
-            <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-[#2963E8] shadow-xs backdrop-blur-xs">
+            <span className="absolute top-2 left-2 rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-semibold text-brand shadow-xs backdrop-blur-xs">
               {aid.type_aide}
             </span>
           )}
@@ -151,7 +151,7 @@ export default function AidCard({ aid, index = 0, historiqueId = null, onShowDet
         {/* Content Section */}
         <CardContent className="flex flex-1 flex-col gap-3 p-4">
           <div className="space-y-0.5">
-            <h4 className="line-clamp-2 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-[#2963E8]">
+            <h4 className="line-clamp-2 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-brand">
               {aid.titre}
             </h4>
             {aid.region_cible && (
@@ -171,7 +171,7 @@ export default function AidCard({ aid, index = 0, historiqueId = null, onShowDet
           <div className="mt-auto pt-1">
             <Button
               onClick={handleConsult}
-              className="w-full bg-[#2963E8] hover:bg-[#1e52c7] text-white rounded-lg text-xs font-semibold"
+              className="w-full bg-brand hover:bg-brand-hover text-brand-foreground rounded-lg text-xs font-semibold"
               id={`consult-aid-${aid.aide_id}`}
             >
               Consulter

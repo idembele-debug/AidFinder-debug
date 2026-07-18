@@ -46,14 +46,14 @@ export default function AdminSidebar({ basePath = '/admin', onNavigate }) {
       </nav>
 
       {/* Actions du bas */}
-      <div className="mt-6 border-t border-white/10 pt-4 space-y-1">
+      <div className="mt-6 border-t border-sidebar-border pt-4 space-y-1">
         {/* Déconnexion */}
         <button
           type="button"
           onClick={handleLogout}
           className={cn(
-            'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-white/80',
-            'transition-all duration-200 hover:bg-white/10 hover:text-white'
+            'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-sidebar-foreground',
+            'transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
           )}
         >
           <LogOut className="size-4 shrink-0" />

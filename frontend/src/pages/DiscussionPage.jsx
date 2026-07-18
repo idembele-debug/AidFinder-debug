@@ -46,7 +46,7 @@ function EmptyChatState({ onSelect }) {
       animate="visible"
       className="flex flex-col items-center justify-center py-8 text-center"
     >
-      <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-[#2963E8]/10 text-[#2963E8] shadow-xs animate-pulse">
+      <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-brand-light text-brand shadow-xs animate-pulse">
         <Sparkles className="size-7" />
       </div>
 
@@ -78,7 +78,7 @@ function AidsRecommendedSection({ aids, historiqueId, onShowDetail }) {
       className="mt-8 border-t border-border/50 pt-6"
     >
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-[#2963E8]/10 text-[#2963E8]">
+        <div className="flex size-7 items-center justify-center rounded-lg bg-brand-light text-brand">
           <Sparkles className="size-3.5" />
         </div>
         <h2 className="text-sm font-bold text-foreground">Aides recommandées pour vous</h2>
@@ -350,7 +350,7 @@ export default function DiscussionPage() {
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Button
             onClick={loadConversation}
-            className="bg-[#2963E8] hover:bg-[#1e52c7] text-white"
+            className="bg-brand hover:bg-brand-hover text-brand-foreground"
             id="retry-load-btn"
           >
             <RefreshCw className="mr-2 size-4" />
@@ -384,7 +384,7 @@ export default function DiscussionPage() {
           </Button>
           <div className="min-w-0">
             <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-              <Bot className="size-4 text-[#2963E8]" />
+              <Bot className="size-4 text-brand" />
               Assistant IA AidFinder
             </h2>
             <p className="truncate text-xs text-muted-foreground">
@@ -399,7 +399,7 @@ export default function DiscussionPage() {
             variant="outline"
             size="sm"
             onClick={handleNewChat}
-            className="hidden sm:flex items-center gap-1.5 text-xs border-border text-muted-foreground hover:text-[#2963E8] hover:border-[#2963E8]/40"
+            className="hidden sm:flex items-center gap-1.5 text-xs border-border text-muted-foreground hover:text-brand hover:border-brand/40"
             id="new-chat-header-btn"
           >
             <Plus className="size-3.5" />
@@ -409,7 +409,7 @@ export default function DiscussionPage() {
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="text-xs font-semibold text-[#2963E8] hover:bg-[#2963E8]/10"
+            className="text-xs font-semibold text-brand hover:bg-brand-light"
             id="quit-discussion-btn"
           >
             Quitter
@@ -446,7 +446,7 @@ export default function DiscussionPage() {
                       <Button
                         size="sm"
                         onClick={() => handleRetry(msg.failedText)}
-                        className="w-fit bg-[#2963E8] hover:bg-[#1e52c7] text-white text-xs font-semibold px-4 py-1.5 rounded-lg"
+                        className="w-fit bg-brand hover:bg-brand-hover text-brand-foreground text-xs font-semibold px-4 py-1.5 rounded-lg"
                       >
                         Réessayer
                       </Button>

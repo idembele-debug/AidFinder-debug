@@ -57,7 +57,7 @@ export default function ConversationBubble({ msg, isStreaming = false }) {
     >
       {/* Avatar Bot */}
       {isBot && (
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#2963E8]/10 text-[#2963E8] shadow-xs mb-5">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-brand-light text-brand shadow-xs mb-5">
           <Bot className="size-4" />
         </div>
       )}
@@ -70,7 +70,7 @@ export default function ConversationBubble({ msg, isStreaming = false }) {
               ? msg.isError
                 ? 'bg-destructive/10 text-destructive border border-destructive/20 rounded-tl-none'
                 : 'bg-muted/50 text-foreground border border-border/40 rounded-tl-none'
-              : 'bg-[#2963E8] text-white rounded-br-none'
+              : 'bg-brand text-brand-foreground rounded-br-none'
           }`}
         >
           {lines.map((line, i) => (

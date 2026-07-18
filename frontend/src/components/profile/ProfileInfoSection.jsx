@@ -78,7 +78,7 @@ export default function ProfileInfoSection({ profile, onSave }) {
           <button
             type="button"
             onClick={startEditing}
-            className="text-sm font-medium text-[#2963E8] hover:underline"
+            className="text-sm font-medium text-brand hover:underline"
           >
             Modifier
           </button>
@@ -162,7 +162,7 @@ export default function ProfileInfoSection({ profile, onSave }) {
               Situation de handicap
             </label>
             <div className="flex gap-2">
-              <Button type="submit" className="bg-[#2963E8] hover:bg-[#1e52c7]" disabled={saving}>
+              <Button type="submit" className="bg-brand hover:bg-brand-hover text-brand-foreground" disabled={saving}>
                 {saving ? 'Enregistrement...' : 'Enregistrer'}
               </Button>
               <Button type="button" variant="outline" onClick={() => setEditing(false)}>

@@ -24,7 +24,7 @@ export default function TypingIndicator() {
 
   return (
     <div className="flex items-start gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#2963E8]/10 text-[#2963E8] shadow-xs">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-brand-light text-brand shadow-xs">
         <Bot className="size-4" />
       </div>
       <div className="flex items-center gap-2 rounded-2xl rounded-tl-none border border-border/40 bg-muted/40 px-5 py-3.5">
@@ -41,7 +41,7 @@ export default function TypingIndicator() {
             <motion.span
               key={i}
               variants={dotVariants}
-              className="size-1.5 rounded-full bg-[#2963E8]"
+              className="size-1.5 rounded-full bg-brand"
             />
           ))}
         </motion.div>

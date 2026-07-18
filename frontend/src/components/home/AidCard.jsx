@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { getAidImageUrl } from '@/src/utils/aids'
 import homeService from '@/src/services/home'
 
-const PLACEHOLDER_GRADIENT = 'bg-gradient-to-br from-[#2963E8]/20 to-[#2963E8]/5'
+const PLACEHOLDER_GRADIENT = 'bg-gradient-to-br from-brand-border to-brand-light/50'
 
 /** Carte d'aide réutilisable (dernières aides, résultats de recherche). */
 export default function AidCard({ aide }) {
@@ -38,7 +38,7 @@ export default function AidCard({ aide }) {
           />
         ) : (
           <div className="flex size-full items-center justify-center">
-            <Tag className="size-10 text-[#2963E8]/40" />
+            <Tag className="size-10 text-brand/40" />
           </div>
         )}
         {aide.type_aide && (
@@ -61,7 +61,7 @@ export default function AidCard({ aide }) {
 
         {aide.region_cible && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="size-3.5 shrink-0 text-[#2963E8]" />
+            <MapPin className="size-3.5 shrink-0 text-brand" />
             <span className="line-clamp-1">{aide.region_cible}</span>
           </div>
         )}
@@ -69,7 +69,7 @@ export default function AidCard({ aide }) {
         <Button
           variant="outline"
           size="sm"
-          className="mt-auto w-full border-[#2963E8]/20 text-[#2963E8] hover:bg-[#2963E8]/5"
+          className="mt-auto w-full border-brand-border text-brand hover:bg-brand-light/50"
           asChild
         >
           {externalUrl ? (

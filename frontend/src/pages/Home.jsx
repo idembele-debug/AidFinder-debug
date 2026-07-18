@@ -23,7 +23,7 @@ import heroImage from '@/src/assets/images/image_finder.png'
 import homeService from '@/src/services/home'
 import { formatFrenchDate } from '@/src/utils/aids'
 
-const BRAND = 'bg-[#2963E8] hover:bg-[#1e52c7]'
+const BRAND = 'bg-brand hover:bg-brand-hover'
 
 const WHY_FEATURES = [
   {
@@ -65,7 +65,7 @@ function SectionHeader({ badge, title, description, id, dark = false }) {
     <div id={id} className="mx-auto mb-12 max-w-2xl text-center">
       {badge && (
         <span className={`mb-3 inline-block rounded-full px-4 py-1.5 text-xs font-medium ${
-          dark ? 'bg-white/10 text-white/90' : 'bg-[#2963E8]/10 text-[#2963E8]'
+          dark ? 'bg-white/10 text-white/90' : 'bg-brand-light text-brand'
         }`}>
           {badge}
         </span>
@@ -120,15 +120,15 @@ export default function Home() {
   return (
     <div className="overflow-hidden">
       {/* 1 — Hero */}
-      <section className="relative bg-gradient-to-b from-[#2963E8]/5 via-background to-background">
+      <section className="relative bg-gradient-to-b from-brand-light/50 via-background to-background">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:py-24 lg:grid-cols-2 lg:gap-16 lg:px-8">
           <div className="order-2 animate-in fade-in slide-in-from-bottom-4 duration-700 lg:order-1">
-            <span className="mb-4 inline-block rounded-full bg-[#2963E8]/10 px-4 py-1.5 text-xs font-medium text-[#2963E8]">
+            <span className="mb-4 inline-block rounded-full bg-brand-light px-4 py-1.5 text-xs font-medium text-brand">
               Plateforme d&apos;aides financières
             </span>
             <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
               Trouver les aides auxquelles vous êtes{' '}
-              <span className="text-[#2963E8]">réellement éligible</span>
+              <span className="text-brand">réellement éligible</span>
             </h1>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
               AidFinder centralise les subventions, analyse votre profil et vous
@@ -171,8 +171,8 @@ export default function Home() {
                 key={title}
                 className="rounded-xl border border-border/60 bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[#2963E8]/10">
-                  <Icon className="size-5 text-[#2963E8]" />
+                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-brand-light">
+                  <Icon className="size-5 text-brand" />
                 </div>
                 <h3 className="font-semibold text-foreground">{title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -258,14 +258,14 @@ export default function Home() {
           <div className="flex flex-col items-center gap-2 md:hidden">
             {HOW_IT_WORKS.map(({ icon: Icon, label }, index) => (
               <div key={label} className="flex flex-col items-center">
-                <div className="flex size-14 items-center justify-center rounded-2xl border border-[#2963E8]/20 bg-[#2963E8]/10 shadow-sm">
-                  <Icon className="size-6 text-[#2963E8]" />
+                <div className="flex size-14 items-center justify-center rounded-2xl border border-brand-border bg-brand-light shadow-sm">
+                  <Icon className="size-6 text-brand" />
                 </div>
                 <p className="mt-3 max-w-[12rem] text-center text-sm font-medium text-foreground">
                   {label}
                 </p>
                 {index < HOW_IT_WORKS.length - 1 && (
-                  <ArrowDown className="my-3 size-5 text-[#2963E8]/40" />
+                  <ArrowDown className="my-3 size-5 text-brand/40" />
                 )}
               </div>
             ))}
@@ -276,8 +276,8 @@ export default function Home() {
             {HOW_IT_WORKS.map(({ icon: Icon, label }, index) => (
               <div key={label} className="flex flex-1 items-start">
                 <div className="flex flex-col items-center">
-                  <div className="flex size-14 items-center justify-center rounded-2xl border border-[#2963E8]/20 bg-[#2963E8]/10 shadow-sm transition-shadow hover:shadow-md">
-                    <Icon className="size-6 text-[#2963E8]" />
+                  <div className="flex size-14 items-center justify-center rounded-2xl border border-brand-border bg-brand-light shadow-sm transition-shadow hover:shadow-md">
+                    <Icon className="size-6 text-brand" />
                   </div>
                   <p className="mt-3 max-w-[8.5rem] text-center text-sm font-medium text-foreground">
                     {label}
@@ -285,7 +285,7 @@ export default function Home() {
                 </div>
                 {index < HOW_IT_WORKS.length - 1 && (
                   <div className="mt-7 flex flex-1 items-center px-2">
-                    <div className="h-px w-full bg-gradient-to-r from-[#2963E8]/40 to-[#2963E8]/10" />
+                    <div className="h-px w-full bg-gradient-to-r from-brand/40 to-brand/10" />
                   </div>
                 )}
               </div>
@@ -371,7 +371,7 @@ function StatCard({ value, label, isText = false }) {
   return (
     <div className="animate-in fade-in zoom-in-95 rounded-xl border border-white/10 bg-white/5 p-8 text-center duration-700">
       <p
-        className={`font-bold text-[#2963E8] ${isText ? 'text-lg sm:text-xl' : 'text-4xl sm:text-5xl'}`}
+        className={`font-bold text-brand ${isText ? 'text-lg sm:text-xl' : 'text-4xl sm:text-5xl'}`}
       >
         {value}
       </p>

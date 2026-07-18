@@ -50,10 +50,10 @@ export default function ChatSuggestions({ onSelect }) {
           key={label}
           variants={itemVariants}
           onClick={() => onSelect?.(label)}
-          className="group flex items-start gap-3 rounded-2xl border border-border/70 bg-white px-4 py-4 text-left shadow-xs transition-all duration-200 hover:border-[#2963E8]/40 hover:bg-[#2963E8]/5 hover:shadow-sm"
+          className="group flex items-start gap-3 rounded-2xl border border-border/70 bg-card px-4 py-4 text-left shadow-xs transition-all duration-200 hover:border-brand/40 hover:bg-brand-light hover:shadow-sm"
           type="button"
         >
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#2963E8]/10 text-[#2963E8] transition-colors group-hover:bg-[#2963E8]/20">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-light text-brand transition-colors group-hover:bg-brand-lighter">
             <Icon className="size-4" />
           </div>
           <div className="min-w-0">

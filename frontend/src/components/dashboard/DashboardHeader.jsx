@@ -54,7 +54,7 @@ export default function DashboardHeader({ nom = 'Utilisateur' }) {
               }}
             />
           ) : (
-            <div className="flex size-full items-center justify-center bg-[#2963E8] text-sm font-semibold text-white">
+            <div className="flex size-full items-center justify-center bg-brand text-sm font-semibold text-brand-foreground">
               {initials}
             </div>
           )}

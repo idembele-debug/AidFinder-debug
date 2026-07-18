@@ -70,14 +70,14 @@ export default function HistorySection({ conversations = [], onContinueChat, onD
       {displayedConversations.map((conv) => (
         <Card
           key={conv.historique_id}
-          className="group cursor-pointer border-border/60 bg-white shadow-xs transition-all duration-200 hover:border-border hover:bg-muted/30 hover:shadow-sm"
+          className="group cursor-pointer border-border/60 bg-card shadow-xs transition-all duration-200 hover:border-border hover:bg-muted/30 hover:shadow-sm"
           onClick={() => handleOpen(conv)}
         >
           <CardContent className="flex items-center justify-between gap-4 p-4">
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
-                <MessageSquare className="size-4 shrink-0 text-[#2963E8]" />
-                <h4 className="truncate text-sm font-semibold text-foreground group-hover:text-[#2963E8] transition-colors duration-200">
+                <MessageSquare className="size-4 shrink-0 text-brand" />
+                <h4 className="truncate text-sm font-semibold text-foreground group-hover:text-brand transition-colors duration-200">
                   {conv.titre_resume || 'Discussion sans titre'}
                 </h4>
               </div>

@@ -7,7 +7,7 @@ import { Bot } from 'lucide-react'
 export function ChatTypingIndicator() {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#2963E8]/10 text-[#2963E8]">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-brand-light text-brand">
         <Bot className="size-4" />
       </div>
       <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-none border border-border/40 bg-muted/40 px-5 py-4">
@@ -16,7 +16,7 @@ export function ChatTypingIndicator() {
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="size-1.5 rounded-full bg-[#2963E8]/60 animate-bounce"
+              className="size-1.5 rounded-full bg-brand/60 animate-bounce"
               style={{ animationDelay: `${i * 0.18}s`, animationDuration: '0.9s' }}
             />
           ))}

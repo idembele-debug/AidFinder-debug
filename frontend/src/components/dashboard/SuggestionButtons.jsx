@@ -31,7 +31,7 @@ export default function SuggestionButtons({ suggestions = [], onSelect }) {
           variants={itemVariants}
           type="button"
           onClick={() => onSelect?.(suggestion)}
-          className="rounded-full border border-border/80 bg-white px-4 py-2 text-xs font-semibold text-foreground shadow-xs transition-all duration-200 hover:border-[#2963E8]/40 hover:bg-[#2963E8]/5 hover:text-[#2963E8] hover:scale-102 active:scale-98"
+          className="rounded-full border border-border/80 bg-card px-4 py-2 text-xs font-semibold text-foreground shadow-xs transition-all duration-200 hover:border-brand/40 hover:bg-brand-light hover:text-brand hover:scale-102 active:scale-98"
         >
           {suggestion}
         </motion.button>

@@ -13,7 +13,7 @@ export default function Navbar() {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/login">Connexion</Link>
           </Button>
-          <Button size="sm" className="bg-[#2963E8] hover:bg-[#1e52c7]" asChild>
+          <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
             <Link to="/register">S&apos;inscrire</Link>
           </Button>
         </nav>

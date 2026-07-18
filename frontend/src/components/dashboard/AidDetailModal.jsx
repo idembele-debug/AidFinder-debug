@@ -22,9 +22,9 @@ export default function AidDetailModal({ aid, onClose, onConsult }) {
   const score = aid.compatibilite ?? aid.score_matching ?? null
 
   const getScoreColor = (val) => {
-    if (val >= 80) return 'text-emerald-500 bg-emerald-50 border-emerald-200'
-    if (val >= 50) return 'text-amber-500 bg-amber-50 border-amber-200'
-    return 'text-red-500 bg-red-50 border-red-200'
+    if (val >= 80) return 'text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800'
+    if (val >= 50) return 'text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800'
+    return 'text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800'
   }
 
   return (
@@ -39,7 +39,7 @@ export default function AidDetailModal({ aid, onClose, onConsult }) {
       <motion.div
         variants={modalVariants}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-border/80 bg-white shadow-2xl"
+        className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-border/80 bg-card shadow-2xl"
       >
         {/* Header Image */}
         <div className="relative h-52 w-full overflow-hidden bg-muted">
@@ -59,7 +59,7 @@ export default function AidDetailModal({ aid, onClose, onConsult }) {
           {/* Badge & Titre sur l'image */}
           <div className="absolute bottom-4 left-6 right-6 space-y-2">
             {aid.type_aide && (
-              <span className="inline-block rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-[#2963E8] shadow-sm uppercase tracking-wider">
+              <span className="inline-block rounded-full bg-background/95 px-3 py-1 text-[10px] font-bold text-brand shadow-sm uppercase tracking-wider">
                 {aid.type_aide}
               </span>
             )}
@@ -106,7 +106,7 @@ export default function AidDetailModal({ aid, onClose, onConsult }) {
           {aid.raisons && aid.raisons.length > 0 && (
             <div className="space-y-3 rounded-2xl bg-muted/30 p-5 border border-border/30">
               <h4 className="flex items-center gap-2 text-sm font-bold text-foreground">
-                <Sparkles className="size-4 text-[#2963E8]" />
+                <Sparkles className="size-4 text-brand" />
                 Analyse de compatibilité
               </h4>
               <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -144,7 +144,7 @@ export default function AidDetailModal({ aid, onClose, onConsult }) {
           {onConsult && (
             <Button
               onClick={onConsult}
-              className="bg-[#2963E8] hover:bg-[#1e52c7] text-white rounded-xl text-xs font-semibold"
+              className="bg-brand hover:bg-brand-hover text-brand-foreground rounded-xl text-xs font-semibold"
               id="consult-modal-btn"
             >
               Consulter le site officiel

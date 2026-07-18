@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 /** Carte d'aide en bas de la sidebar — conforme à la maquette */
 export default function HelpCard() {
   return (
-    <Card className="border-0 bg-white shadow-md">
+    <Card className="border-0 bg-card shadow-md">
       <CardHeader className="px-4 pt-4 pb-0">
         <CardTitle className="text-sm font-semibold text-foreground">
           Besoin d&apos;aide ?

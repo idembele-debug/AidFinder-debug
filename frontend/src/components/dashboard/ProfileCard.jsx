@@ -33,10 +33,10 @@ export default function ProfileCard() {
     : 'U'
 
   return (
-    <Card className="border-border/60 bg-white shadow-xs">
+    <Card className="border-border/60 bg-card shadow-xs">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
-          <UserCheck className="size-5 text-[#2963E8]" />
+          <UserCheck className="size-5 text-brand" />
           Mon Profil
         </CardTitle>
       </CardHeader>
@@ -51,7 +51,7 @@ export default function ProfileCard() {
                 className="aspect-square size-full object-cover"
               />
             ) : (
-              <div className="flex size-full items-center justify-center bg-[#2963E8]/10 text-sm font-semibold text-[#2963E8]">
+              <div className="flex size-full items-center justify-center bg-brand-light text-sm font-semibold text-brand">
                 {initials}
               </div>
             )}
@@ -68,14 +68,14 @@ export default function ProfileCard() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold">
             <span className="text-muted-foreground">Complétude du profil</span>
-            <span className={progressPercent === 100 ? 'text-green-600' : 'text-[#2963E8]'}>
+            <span className={progressPercent === 100 ? 'text-green-600' : 'text-brand'}>
               {progressPercent}%
             </span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
               className={`h-full rounded-full transition-all duration-500 ease-out ${
-                progressPercent === 100 ? 'bg-green-500' : 'bg-[#2963E8]'
+                progressPercent === 100 ? 'bg-green-500' : 'bg-brand'
               }`}
               style={{ width: `${progressPercent}%` }}
             />
@@ -113,7 +113,7 @@ export default function ProfileCard() {
         {missing.length > 0 && (
           <Link
             to="/dashboard/profil"
-            className="flex h-9 w-full items-center justify-center rounded-lg bg-[#2963E8] text-xs font-semibold text-white transition-colors hover:bg-[#1e52c7]"
+            className="flex h-9 w-full items-center justify-center rounded-lg bg-brand text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand-hover"
           >
             Compléter mon profil
           </Link>
