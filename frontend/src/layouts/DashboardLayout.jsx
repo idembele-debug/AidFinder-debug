@@ -1,26 +1,12 @@
-import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/src/components/dashboard/Sidebar'
 import DashboardShell from '@/src/components/dashboard/DashboardShell'
 import ProfileCompletionDialog from '@/src/components/profile/ProfileCompletionDialog'
 import { ProfileProvider, useProfile } from '@/src/contexts/ProfileContext'
-import { useAuth } from '@/src/contexts/AuthContext'
 
 const BASE_PATH = '/dashboard'
 
 function UserDashboardContent() {
-  const { deactivateAccount } = useAuth()
   const { loading, isProfileComplete } = useProfile()
-  const navigate = useNavigate()
-
-  const handleDeactivate = async () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir désactiver votre compte ?')) return
-    try {
-      await deactivateAccount()
-      navigate('/')
-    } catch {
-      // Erreur gérée par le composant appelant
-    }
-  }
 
   return (
     <DashboardShell
@@ -30,7 +16,6 @@ function UserDashboardContent() {
       sidebar={({ onNavigate }) => (
         <Sidebar
           basePath={BASE_PATH}
-          onDeactivate={handleDeactivate}
           onNavigate={onNavigate}
         />
       )}

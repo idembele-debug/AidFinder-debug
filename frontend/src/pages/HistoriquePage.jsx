@@ -106,10 +106,10 @@ export default function HistoriquePage() {
             <div
               key={conv.historique_id}
               onClick={() => handleRowClick(conv.historique_id)}
-              className="group cursor-pointer rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all duration-300 hover:border-border hover:shadow-md hover:bg-muted/10"
+              className="group cursor-pointer rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all duration-300 hover:border-border hover:shadow-md hover:bg-muted/10 w-full overflow-hidden"
             >
               {/* Layout : conteneur principal sans overflow caché */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 min-w-0">
                 {/* Contenu textuel — min-w-0 garantit que truncate fonctionne */}
                 <div className="min-w-0 flex-1 space-y-1">
                   <h4 className="truncate text-sm font-bold text-foreground group-hover:text-brand transition-colors duration-200">
