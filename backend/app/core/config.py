@@ -11,6 +11,7 @@ print(f"[CONFIG] OPENROUTER_MODEL  = |{os.getenv('OPENROUTER_MODEL', 'NON_TROUVÃ
 
 DIFY_API_KEY = os.getenv("DIFY_API_KEY", "")
 DIFY_API_URL = os.getenv("DIFY_API_URL", "https://api.dify.ai/v1")
+DIFY_USER = os.getenv("DIFY_USER", "")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
