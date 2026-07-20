@@ -7,6 +7,11 @@ print(f"[CONFIG] load_dotenv() a trouvé .env ? {loaded}")
 print(f"[CONFIG] OPENROUTER_API_KEY = |{os.getenv('OPENROUTER_API_KEY', 'NON_TROUVÉ')}|")
 print(f"[CONFIG] OPENROUTER_MODEL  = |{os.getenv('OPENROUTER_MODEL', 'NON_TROUVÉ')}|")
 
+# ─── Dify ───────────────────────────────────────────────
+
+DIFY_API_KEY = os.getenv("DIFY_API_KEY", "")
+DIFY_API_URL = os.getenv("DIFY_API_URL", "https://api.dify.ai/v1")
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
