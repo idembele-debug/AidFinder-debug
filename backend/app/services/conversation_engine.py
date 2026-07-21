@@ -41,6 +41,7 @@ class ConversationMeta:
     recommendation_shown: bool = False
     last_recommended_aids: list[int] = field(default_factory=list)
     subject: str | None = None
+    dify_conversation_id: str | None = None
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), default=str)

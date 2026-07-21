@@ -23,7 +23,7 @@ from app.services.conversation_engine import (
     ConversationState,
     IntentCategory,
 )
-from app.services.llm_client import llm_client
+from app.services.dify_client import dify_client
 
 logger = logging.getLogger("aidfinder.response_generator")
 
@@ -354,13 +354,52 @@ class ConversationFallback:
 
 class ResponseGenerator:
     """
-    LLM-first response generator.
-    Tries: OpenRouter → Qwen → ConversationFallback
+    LLM-first response generator using Dify.
+    Tries: Dify → ConversationFallback
     """
 
     def __init__(self) -> None:
         self.prompt_builder = PromptBuilder()
         self.fallback = ConversationFallback()
+
+    def _build_dify_inputs(
+        self,
+        system_prompt: str,
+        decision: ConversationDecision,
+        meta: ConversationMeta,
+        history: list[dict] | None = None,
+        recommendations: list[dict] | None = None,
+        first_response: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Build inputs dict for Dify containing system prompt, profile, and context.
+        
+        Only reuses existing data from decision, meta, and history.
+        """
+        inputs = {
+            "system_prompt": system_prompt,
+            "profile": decision.merged_profile,
+            "state": decision.new_state.value,
+            "intent": decision.intent.value,
+        }
+        
+        # Add history if available
+        if history:
+            inputs["history"] = history
+        
+        # Add recommendations if available
+        if recommendations:
+            inputs["recommendations"] = recommendations
+        
+        # Add first response if available (for enriched calls)
+        if first_response:
+            inputs["first_response"] = first_response
+        
+        return inputs
+
+    def _get_conversation_id(self, meta: ConversationMeta) -> str | None:
+        """Extract Dify conversation_id from meta if available."""
+        return getattr(meta, 'dify_conversation_id', None)
 
     def generate(
         self,
@@ -370,31 +409,56 @@ class ResponseGenerator:
         history: list[dict] | None = None,
         recommendations: list[dict] | None = None,
     ) -> str:
-        logger.info("[GENERATE] Début — appel LLM (avec recommendations=%s)",
+        logger.info("[GENERATE] Début — appel Dify (avec recommendations=%s)",
                      "oui" if recommendations else "non")
 
         if recommendations:
             logger.info("[GENERATE] Recommendations fournies en entrée: %d aide(s)",
                          len(recommendations))
         else:
-            logger.info("[GENERATE] Pas de recommendations — LLM répond librement")
+            logger.info("[GENERATE] Pas de recommendations — Dify répond librement")
 
-        # Always try LLM first
-        if llm_client.is_available:
-            logger.info("[GENERATE] LLM disponible — construction du prompt")
-            messages = self.prompt_builder.build_messages(
-                decision, meta, user_message, history, recommendations
-            )
-            response = llm_client.generate(messages)
-            if response and response.strip():
-                logger.info("[GENERATE] Réponse LLM obtenue (%d caractères)", len(response))
+        # Build system prompt using PromptBuilder
+        logger.info("[GENERATE] Construction du system prompt")
+        system_prompt = self.prompt_builder.build_system_prompt(
+            decision, meta, history, recommendations
+        )
+        
+        # Build inputs dict with profile and context
+        dify_inputs = self._build_dify_inputs(
+            system_prompt, decision, meta, history, recommendations
+        )
+        
+        # Get existing conversation_id if available
+        conversation_id = self._get_conversation_id(meta)
+        logger.debug("[GENERATE] conversation_id=%s", conversation_id or "(new)")
+        
+        # Call Dify with query (last message), inputs, and conversation_id
+        logger.debug("[GENERATE] Envoi à Dify — query: %s...", user_message[:50])
+        result = dify_client.send_message(
+            message=user_message,
+            conversation_id=conversation_id,
+            inputs=dify_inputs,
+        )
+        
+        if result.get("success"):
+            response = result.get("answer", "").strip()
+            if response:
+                # Store new conversation_id if received
+                received_conversation_id = result.get("conversation_id")
+                if received_conversation_id:
+                    logger.debug("[GENERATE] conversation_id reçue: %s", received_conversation_id)
+                    meta.dify_conversation_id = received_conversation_id
+                
+                logger.info("[GENERATE] Réponse Dify obtenue (%d caractères)", len(response))
                 return response
-            logger.warning("[GENERATE] LLM a retourné une réponse vide ou None")
+            logger.warning("[GENERATE] Dify a retourné une réponse vide")
         else:
-            logger.warning("[GENERATE] LLM non disponible")
+            error_msg = result.get("error", "Erreur Dify inconnue")
+            logger.error("[GENERATE] Dify a échoué: %s", error_msg)
 
         # Fallback to conversation engine
-        logger.warning("[GENERATE] UTILISATION DU FALLBACK — LLM indisponible ou réponse vide")
+        logger.warning("[GENERATE] UTILISATION DU FALLBACK — Dify indisponible ou réponse vide")
         return self.fallback.generate(decision, meta, history, recommendations)
 
     def generate_enriched(
@@ -408,28 +472,55 @@ class ResponseGenerator:
     ) -> str:
         """
         Generate an enriched response that naturally integrates recommendations
-        into the conversation. The first_response from the initial LLM call
+        into the conversation. The first_response from the initial Dify call
         is used as context for the rewritten response.
         """
-        logger.info("[ENRICHED] Début — appel LLM enrichi avec %d recommendations",
+        logger.info("[ENRICHED] Début — appel Dify enrichi avec %d recommendations",
                      len(recommendations) if recommendations else 0)
         logger.info("[ENRICHED] Première réponse (%d caractères) va être enrichie", len(first_response))
         logger.info("[ENRICHED] Recommendations: %s",
                      [r["titre"] for r in (recommendations or [])])
 
-        if not llm_client.is_available:
-            logger.warning("[ENRICHED] LLM indisponible — fallback direct")
-            return self.fallback.generate(decision, meta, history, recommendations)
-
+        # Build enriched system prompt using PromptBuilder
         messages = self.prompt_builder.build_enriched_prompt(
             decision, meta, user_message, first_response, history, recommendations
         )
-        response = llm_client.generate(messages)
-        if response and response.strip():
-            logger.info("[ENRICHED] Réponse enrichie obtenue (%d caractères)", len(response))
-            return response
+        system_prompt = messages[0]["content"]
+        
+        # Build inputs dict with profile, context, and first response
+        dify_inputs = self._build_dify_inputs(
+            system_prompt, decision, meta, history, recommendations, first_response
+        )
+        
+        # Get existing conversation_id if available
+        conversation_id = self._get_conversation_id(meta)
+        logger.debug("[ENRICHED] conversation_id=%s", conversation_id or "(existing)")
+        
+        # Call Dify with query (last message), inputs, and conversation_id
+        logger.debug("[ENRICHED] Envoi à Dify — query: %s...", user_message[:50])
+        result = dify_client.send_message(
+            message=user_message,
+            conversation_id=conversation_id,
+            inputs=dify_inputs,
+        )
+        
+        if result.get("success"):
+            response = result.get("answer", "").strip()
+            if response:
+                # Store new conversation_id if received
+                received_conversation_id = result.get("conversation_id")
+                if received_conversation_id:
+                    logger.debug("[ENRICHED] conversation_id reçue: %s", received_conversation_id)
+                    meta.dify_conversation_id = received_conversation_id
+                
+                logger.info("[ENRICHED] Réponse enrichie obtenue (%d caractères)", len(response))
+                return response
+            logger.warning("[ENRICHED] Dify enrichi a retourné une réponse vide")
+        else:
+            error_msg = result.get("error", "Erreur Dify inconnue")
+            logger.error("[ENRICHED] Dify enrichi a échoué: %s", error_msg)
 
-        logger.warning("[ENRICHED] LLM enrichi a échoué — fallback")
+        logger.warning("[ENRICHED] UTILISATION DU FALLBACK — Dify enrichi indisponible")
         return self.fallback.generate(decision, meta, history, recommendations)
 
     async def generate_stream(
@@ -444,31 +535,56 @@ class ResponseGenerator:
         logger.info("[STREAM] Début stream (avec recommendations=%s)",
                      "oui" if recommendations else "non")
 
-        if not llm_client.is_available:
-            logger.warning("[STREAM] LLM indisponible — fallback en un chunk")
-            text = self.fallback.generate(decision, meta, history, recommendations)
-            yield text
-            return
-
-        messages = self.prompt_builder.build_messages(
-            decision, meta, user_message, history, recommendations
+        # Build system prompt using PromptBuilder
+        system_prompt = self.prompt_builder.build_system_prompt(
+            decision, meta, history, recommendations
         )
-        stream = await llm_client.generate_stream(messages)
-
-        if stream is None:
-            logger.warning("[STREAM] Stream non disponible — fallback")
+        
+        # Build inputs dict with profile and context
+        dify_inputs = self._build_dify_inputs(
+            system_prompt, decision, meta, history, recommendations
+        )
+        
+        # Get existing conversation_id if available
+        conversation_id = self._get_conversation_id(meta)
+        logger.debug("[STREAM] conversation_id=%s", conversation_id or "(new)")
+        
+        logger.info("[STREAM] Stream Dify démarré")
+        stream_failed = False
+        chunk_count = 0
+        
+        try:
+            for event in dify_client.send_message_stream(
+                message=user_message,
+                conversation_id=conversation_id,
+                inputs=dify_inputs,
+            ):
+                if not event.get("success"):
+                    logger.warning("[STREAM] Erreur stream: %s", event.get("error"))
+                    stream_failed = True
+                    break
+                
+                # Extract answer from event
+                answer = event.get("answer", "").strip()
+                if answer:
+                    chunk_count += 1
+                    yield answer
+                
+                # Store conversation_id if received
+                received_conversation_id = event.get("conversation_id")
+                if received_conversation_id and not getattr(meta, 'dify_conversation_id', None):
+                    logger.debug("[STREAM] conversation_id reçue: %s", received_conversation_id)
+                    meta.dify_conversation_id = received_conversation_id
+        except Exception as e:
+            logger.error("[STREAM] Exception stream: %s", e)
+            stream_failed = True
+        
+        if stream_failed or chunk_count == 0:
+            logger.warning("[STREAM] Stream échoué ou vide — fallback")
             text = self.fallback.generate(decision, meta, history, recommendations)
             yield text
-            return
-
-        chunk_count = 0
-        logger.info("[STREAM] Stream démarré avec succès")
-        async with stream:
-            async for chunk in stream.iter_text_chunks():
-                chunk_count += 1
-                yield chunk
-
-        logger.info("[STREAM] Stream terminé — %d chunks envoyés", chunk_count)
+        else:
+            logger.info("[STREAM] Stream terminé — %d chunks envoyés", chunk_count)
 
     async def generate_enriched_stream(
         self,
@@ -487,31 +603,57 @@ class ResponseGenerator:
                      len(recommendations) if recommendations else 0)
         logger.info("[ENRICHED STREAM] Première réponse: %s...", first_response[:200])
 
-        if not llm_client.is_available:
-            logger.warning("[ENRICHED STREAM] LLM indisponible — fallback")
-            text = self.fallback.generate(decision, meta, history, recommendations)
-            yield text
-            return
-
+        # Build enriched system prompt using PromptBuilder
         messages = self.prompt_builder.build_enriched_prompt(
             decision, meta, user_message, first_response, history, recommendations
         )
-        stream = await llm_client.generate_stream(messages)
-
-        if stream is None:
-            logger.warning("[ENRICHED STREAM] Stream non disponible — fallback")
+        system_prompt = messages[0]["content"]
+        
+        # Build inputs dict with profile, context, and first response
+        dify_inputs = self._build_dify_inputs(
+            system_prompt, decision, meta, history, recommendations, first_response
+        )
+        
+        # Get existing conversation_id if available
+        conversation_id = self._get_conversation_id(meta)
+        logger.debug("[ENRICHED STREAM] conversation_id=%s", conversation_id or "(existing)")
+        
+        logger.info("[ENRICHED STREAM] Stream enrichi Dify démarré")
+        stream_failed = False
+        chunk_count = 0
+        
+        try:
+            for event in dify_client.send_message_stream(
+                message=user_message,
+                conversation_id=conversation_id,
+                inputs=dify_inputs,
+            ):
+                if not event.get("success"):
+                    logger.warning("[ENRICHED STREAM] Erreur stream: %s", event.get("error"))
+                    stream_failed = True
+                    break
+                
+                # Extract answer from event
+                answer = event.get("answer", "").strip()
+                if answer:
+                    chunk_count += 1
+                    yield answer
+                
+                # Store conversation_id if received
+                received_conversation_id = event.get("conversation_id")
+                if received_conversation_id and not getattr(meta, 'dify_conversation_id', None):
+                    logger.debug("[ENRICHED STREAM] conversation_id reçue: %s", received_conversation_id)
+                    meta.dify_conversation_id = received_conversation_id
+        except Exception as e:
+            logger.error("[ENRICHED STREAM] Exception stream: %s", e)
+            stream_failed = True
+        
+        if stream_failed or chunk_count == 0:
+            logger.warning("[ENRICHED STREAM] Stream enrichi échoué ou vide — fallback")
             text = self.fallback.generate(decision, meta, history, recommendations)
             yield text
-            return
-
-        chunk_count = 0
-        logger.info("[ENRICHED STREAM] Stream enrichi démarré")
-        async with stream:
-            async for chunk in stream.iter_text_chunks():
-                chunk_count += 1
-                yield chunk
-
-        logger.info("[ENRICHED STREAM] Stream terminé — %d chunks", chunk_count)
+        else:
+            logger.info("[ENRICHED STREAM] Stream enrichi terminé — %d chunks", chunk_count)
 
 
 # Singleton
