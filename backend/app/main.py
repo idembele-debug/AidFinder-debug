@@ -55,6 +55,15 @@ def ensure_runtime_columns():
         return
     add_column_statements = (
         "ALTER TABLE aides ADD COLUMN IF NOT EXISTS est_active BOOLEAN NOT NULL DEFAULT TRUE",
+        "ALTER TABLE aides ADD COLUMN IF NOT EXISTS source_record_id VARCHAR",
+        "ALTER TABLE aides ADD COLUMN IF NOT EXISTS reference_offre VARCHAR",
+        "ALTER TABLE aides ADD COLUMN IF NOT EXISTS entreprise_nom VARCHAR",
+        "ALTER TABLE aides ADD COLUMN IF NOT EXISTS date_publication DATE",
+        "ALTER TABLE aides ADD COLUMN IF NOT EXISTS lieu_travail VARCHAR",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_aides_source_record_id ON aides (source_id, source_record_id) WHERE source_record_id IS NOT NULL",
+        "CREATE INDEX IF NOT EXISTS ix_aides_content_hash ON aides (content_hash)",
+        "ALTER TABLE scraping_logs ALTER COLUMN finished_at DROP NOT NULL",
+        "ALTER TABLE scraping_logs ALTER COLUMN duration DROP NOT NULL",
         "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS ville VARCHAR",
         "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS date_derniere_connexion TIMESTAMP NULL",
         "ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS theme VARCHAR NOT NULL DEFAULT 'light'",

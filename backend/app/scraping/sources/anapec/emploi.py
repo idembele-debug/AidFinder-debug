@@ -15,15 +15,15 @@ Fonctionnement :
 Compatible avec manager.py, scheduler.py, storage.py, normalizer.py et utils.py.
 """
 
-from app.scraping.utils import (
-    sleep_random, log_scraping_error,
-)
+from app.scraping.utils import log_scraping_error
 from app.scraping.normalizer import normalize_record
 import requests
 import re
 import json
 import html as html_module
 import time
+import os
+from time import perf_counter
 
 
 # ── Constantes ─────────────────────────────────────────────────
@@ -34,6 +34,39 @@ SOURCE_TYPE = "Organisme public"
 CATEGORY_NAME = "Offres d'emploi"
 MAX_PAGES = 1000  # sécurité
 OFFERS_PER_PAGE = 15
+LAST_METRICS = {}
+
+
+def _default_max_pages() -> int:
+    value = os.getenv("ANAPEC_EMPLOI_MAX_PAGES", "20").strip().lower()
+    if value in {"", "all", "full", "0"}:
+        return MAX_PAGES
+    try:
+        return max(1, min(int(value), MAX_PAGES))
+    except ValueError:
+        return 20
+
+
+def _compute_full_scan(
+    page_limit: int,
+    total_pages_available: int,
+    pages_fetched: int,
+    pages_failed: int,
+) -> bool:
+    """Détermine si le scan a couvert toutes les pages nécessaires.
+
+    full_scan n'est True QUE si :
+      - toutes les pages disponibles ont été demandées (page_limit >= total) ;
+      - aucune page n'a échoué (réseau, parsing, snapshot manquant) ;
+      - le nombre de pages réellement récupérées couvre bien page_limit.
+
+    Une page simplement tentée mais échouée ne compte PAS comme récupérée.
+    """
+    return (
+        page_limit >= total_pages_available
+        and pages_failed == 0
+        and pages_fetched >= page_limit
+    )
 
 
 _HEADERS = {
@@ -292,7 +325,7 @@ def _fetch_page(
     return None
 
 
-def fetch_listings() -> list[dict]:
+def fetch_listings(metrics: dict | None = None, max_pages: int | None = None) -> list[dict]:
     """Récupère toutes les offres d'emploi via Livewire.
 
     1. Télécharge la page initiale (page 1, déjà dans le snapshot).
@@ -305,39 +338,66 @@ def fetch_listings() -> list[dict]:
     print(f"[ANAPEC-EMPLOI] Téléchargement de {START_URL}")
     session = _get_session()
     try:
+        started = perf_counter()
         response = session.get(START_URL, timeout=15)
         response.raise_for_status()
+        if metrics is not None:
+            metrics["http_seconds"] += perf_counter() - started
         html_text = response.text
         cookies = response.cookies
     except Exception as e:
+        if metrics is not None:
+            metrics["errors"] += 1
         log_scraping_error("anapec_emploi_init", str(e))
         print(f"[ANAPEC-EMPLOI] Erreur accès à {START_URL}: {e}")
         return all_offers
 
     # Extraire le snapshot et sa chaîne brute
+    started = perf_counter()
     snapshot = _extract_wire_snapshot(html_text)
     if not snapshot:
+        if metrics is not None:
+            metrics["errors"] += 1
         print("[ANAPEC-EMPLOI] Aucun snapshot Livewire trouvé.")
         return all_offers
 
     snapshot_str = _extract_raw_snapshot(html_text)
     if not snapshot_str:
+        if metrics is not None:
+            metrics["errors"] += 1
         print("[ANAPEC-EMPLOI] Impossible d'extraire le snapshot brut.")
         return all_offers
+    if metrics is not None:
+        metrics["parsing_seconds"] += perf_counter() - started
 
     # Extraire les offres de la page 1
+    started = perf_counter()
     page_offers = _extract_offers_from_snapshot(snapshot)
     all_offers.extend(page_offers)
     print(f"[ANAPEC-EMPLOI] Page 1 : {len(page_offers)} offres")
+    if metrics is not None:
+        metrics["parsing_seconds"] += perf_counter() - started
+        metrics["pages"] = 1
 
     # Infos de pagination
     info = _extract_pagination_info(snapshot)
-    total_pages = info["total_pages"]
-    print(f"[ANAPEC-EMPLOI] Pages totales : {total_pages}")
+    total_pages_available = min(info["total_pages"], MAX_PAGES)
+    page_limit = min(total_pages_available, max_pages or _default_max_pages())
+    print(f"[ANAPEC-EMPLOI] Pages totales : {total_pages_available}")
+    if page_limit < total_pages_available:
+        print(f"[ANAPEC-EMPLOI] Synchronisation incrémentale limitée à {page_limit} pages")
+    if metrics is not None:
+        metrics["total_pages_available"] = total_pages_available
+        metrics["page_limit"] = page_limit
+        # full_scan est recalculé après la boucle, une fois que l'on sait
+        # si toutes les pages ont réellement été récupérées avec succès.
+        metrics["full_scan"] = False
 
     # Extraire le CSRF token et l'URI update
     csrf_token, update_uri = _extract_livewire_config(html_text)
     if not csrf_token or not update_uri:
+        if metrics is not None:
+            metrics["errors"] += 1
         print("[ANAPEC-EMPLOI] Aucune config Livewire trouvée.")
         return all_offers
     print(f"[ANAPEC-EMPLOI] Livewire update URI: {update_uri}")
@@ -345,28 +405,43 @@ def fetch_listings() -> list[dict]:
     # Extraire l'ID du composant
     component_id = _extract_component_id(snapshot)
     if not component_id:
+        if metrics is not None:
+            metrics["errors"] += 1
         print("[ANAPEC-EMPLOI] Aucun ID de composant trouvé.")
         return all_offers
 
     # ── 2. Pages suivantes ────────────────────────────────────
     current_snapshot_str = snapshot_str
     page = 1
-    while page < total_pages and page < MAX_PAGES:
+    # La page 1 a déjà été récupérée avec succès au-dessus.
+    pages_fetched = 1
+    pages_failed = 0
+    while page < page_limit:
         page += 1
-        sleep_random(2, 4)
 
-        print(f"[ANAPEC-EMPLOI] Page {page}/{total_pages}...")
+        print(f"[ANAPEC-EMPLOI] Page {page}/{page_limit}...")
+        started = perf_counter()
         livewire_data = _fetch_page(
             page, csrf_token, cookies, component_id, current_snapshot_str, update_uri, session
         )
+        if metrics is not None:
+            metrics["http_seconds"] += perf_counter() - started
+            metrics["pages"] = page
 
         if not livewire_data:
+            if metrics is not None:
+                metrics["errors"] += 1
+            pages_failed += 1
             print(f"[ANAPEC-EMPLOI] Page {page} impossible après 5 tentatives.")
             continue
 
         # Extraire le nouveau snapshot brut de la réponse
+        started = perf_counter()
         new_raw = _extract_raw_snapshot_from_response(livewire_data)
         if not new_raw:
+            if metrics is not None:
+                metrics["errors"] += 1
+            pages_failed += 1
             print(f"[ANAPEC-EMPLOI] Aucun snapshot dans la réponse page {page}.")
             break
 
@@ -374,6 +449,9 @@ def fetch_listings() -> list[dict]:
         try:
             new_data = json.loads(new_raw)
         except json.JSONDecodeError:
+            if metrics is not None:
+                metrics["errors"] += 1
+            pages_failed += 1
             print(f"[ANAPEC-EMPLOI] Erreur parsing snapshot page {page}.")
             break
 
@@ -383,6 +461,9 @@ def fetch_listings() -> list[dict]:
             break
 
         all_offers.extend(page_offers)
+        pages_fetched += 1
+        if metrics is not None:
+            metrics["parsing_seconds"] += perf_counter() - started
         print(f"[ANAPEC-EMPLOI] Page {page} : {len(page_offers)} offres "
               f"(total : {len(all_offers)})")
 
@@ -393,6 +474,20 @@ def fetch_listings() -> list[dict]:
 
         # Utiliser le nouveau snapshot pour la page suivante
         current_snapshot_str = new_raw
+
+    # ── 3. Calcul de full_scan (sécurité soft-disable) ────────
+    # full_scan n'est True QUE si toutes les pages nécessaires ont
+    # effectivement été récupérées avec succès. Une page simplement
+    # tentée mais échouée ne compte pas comme récupérée.
+    if metrics is not None:
+        metrics["pages_fetched"] = pages_fetched
+        metrics["pages_failed"] = pages_failed
+        metrics["full_scan"] = _compute_full_scan(
+            page_limit,
+            total_pages_available,
+            pages_fetched,
+            pages_failed,
+        )
 
     print(f"[ANAPEC-EMPLOI] Total offres récupérées : {len(all_offers)}")
     return all_offers
@@ -409,8 +504,9 @@ def parse_listing(offer_data: dict) -> dict | None:
     reference = offer_data.get("ref_offre")
     entreprise = offer_data.get("entreprise")
     date_offre = offer_data.get("date_offre")
+    stable_id = str(offer_id or reference or "").strip()
 
-    if not offer_id or not titre:
+    if not stable_id or not titre:
         return None
 
     url_officielle = f"{BASE_URL}/chercheurs/offres"
@@ -444,6 +540,7 @@ def parse_listing(offer_data: dict) -> dict | None:
         "handicap_requis": False,
         "url_officielle": url_officielle,
         "image_url": None,
+        "source_record_id": f"anapec_emploi:{stable_id}",
         "reference_offre": reference,
         "entreprise_nom": entreprise if entreprise and entreprise != "-" else None,
         "date_publication": date_offre,
@@ -453,31 +550,65 @@ def parse_listing(offer_data: dict) -> dict | None:
     return normalize_record(data)
 
 
-def scrape_emploi():
+def scrape_emploi(max_pages: int | None = None):
     """Lance le scraping complet des offres d'emploi ANAPEC.
 
     Point d'entrée exclusif : https://anapec.ma/chercheurs/offres.
     """
     print("[ANAPEC-EMPLOI] Début du scraping des offres d'emploi")
+    started_total = perf_counter()
+    metrics = {
+        "pages": 0,
+        "total_pages_available": 0,
+        "page_limit": 0,
+        "full_scan": False,
+        "offers": 0,
+        "records": 0,
+        "errors": 0,
+        "http_seconds": 0.0,
+        "parsing_seconds": 0.0,
+        "processing_seconds": 0.0,
+        "total_seconds": 0.0,
+    }
     records = []
 
     try:
-        offers = fetch_listings()
+        offers = fetch_listings(metrics, max_pages=max_pages)
+        metrics["offers"] = len(offers)
         print(f"[ANAPEC-EMPLOI] {len(offers)} offres à traiter")
 
+        started_processing = perf_counter()
         for i, offer in enumerate(offers, 1):
-            print(f"[ANAPEC-EMPLOI] Traitement offre {i}/{len(offers)}")
-            record = parse_listing(offer)
-            if record:
-                records.append(record)
-            if i % 10 == 0:
-                sleep_random(2, 3)
-            else:
-                sleep_random(0.5, 1.5)
+            try:
+                record = parse_listing(offer)
+                if record:
+                    records.append(record)
+                else:
+                    metrics["errors"] += 1
+            except Exception as exc:
+                metrics["errors"] += 1
+                log_scraping_error(f"anapec_emploi_offer_{i}", str(exc))
+        metrics["processing_seconds"] = perf_counter() - started_processing
 
     except Exception as e:
+        metrics["errors"] += 1
         log_scraping_error("anapec_emploi", str(e))
         print(f"[ANAPEC-EMPLOI] Erreur : {e}")
 
+    metrics["records"] = len(records)
+    metrics["total_seconds"] = perf_counter() - started_total
+    global LAST_METRICS
+    LAST_METRICS = metrics
     print(f"[ANAPEC-EMPLOI] {len(records)} enregistrements récupérés")
+    print(
+        "[ANAPEC-EMPLOI] Metrics: "
+        f"pages={metrics['pages']} offres={metrics['offers']} "
+        f"http={metrics['http_seconds']:.2f}s parsing={metrics['parsing_seconds']:.2f}s "
+        f"processing={metrics['processing_seconds']:.2f}s total={metrics['total_seconds']:.2f}s "
+        f"errors={metrics['errors']}"
+    )
     return records
+
+
+def get_last_metrics() -> dict:
+    return dict(LAST_METRICS)

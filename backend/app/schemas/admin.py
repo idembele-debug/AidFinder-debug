@@ -118,6 +118,13 @@ class AdminSourceScrapeResponse(BaseModel):
     source_id: int
     source: str
     records: int
+    new_records: int = 0
+    updated_records: int = 0
+    unchanged_records: int = 0
+    duplicate_records: int = 0
+    expired_records: int = 0
+    errors: int = 0
+    duration_seconds: float = 0.0
     dernier_scraping: datetime | None = None
 
     @field_serializer("dernier_scraping")
@@ -148,8 +155,8 @@ class AdminScrapeLogResponse(BaseModel):
     scraplogs_id: int
     source: str
     started_at: datetime
-    finished_at: datetime
-    duration: str
+    finished_at: datetime | None = None
+    duration: str | None = None
     new_records: int
     updated_records: int
     expired_records: int

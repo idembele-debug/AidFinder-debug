@@ -8,8 +8,8 @@ class ScrapingLog(Base):
     scraplogs_id = Column(Integer, primary_key=True, index=True)
     source = Column(String(100), nullable=False)
     started_at = Column(DateTime(timezone=True), nullable=False)
-    finished_at = Column(DateTime(timezone=True), nullable=False)
-    duration = Column(String(30), nullable=False)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    duration = Column(String(30), nullable=True)
     new_records = Column(Integer, default=0)
 
     updated_records = Column(Integer, default=0)

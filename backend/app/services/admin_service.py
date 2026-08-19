@@ -447,15 +447,27 @@ def list_sources(db: Session) -> list[dict]:
 def rerun_source_scraping(db: Session, source_id: int) -> dict:
     source = _get_source_or_404(db, source_id)
     try:
-        records = run_all_scrapers()
-        source.derniere_collecte = utc_now()
-        db.commit()
-        db.refresh(source)
+        stats = run_all_scrapers(("anapec_emploi",))
+        already_running = any(
+            item.get("status") == "already_running"
+            for item in stats.get("scrapers", [])
+        )
+        if not already_running:
+            source.derniere_collecte = utc_now()
+            db.commit()
+            db.refresh(source)
         return {
-            "message": "Scraping relancé avec succès.",
+            "message": "Scraping déjà en cours." if already_running else "Scraping terminé.",
             "source_id": source.source_id,
             "source": source.nom,
-            "records": len(records),
+            "records": stats.get("records", 0),
+            "new_records": stats.get("new_records", 0),
+            "updated_records": stats.get("updated_records", 0),
+            "unchanged_records": stats.get("unchanged_records", 0),
+            "duplicate_records": stats.get("duplicate_records", 0),
+            "expired_records": stats.get("expired_records", 0),
+            "errors": stats.get("errors", 0),
+            "duration_seconds": round(stats.get("total_seconds", 0.0), 2),
             "dernier_scraping": source.derniere_collecte,
         }
     except Exception:

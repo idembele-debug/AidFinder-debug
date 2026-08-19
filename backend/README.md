@@ -118,6 +118,7 @@ Voir `.env.example`.
 | `OPENROUTER_*` | Client LLM encore utilise pour analyses/fallbacks |
 | `QWEN_*` | Fallback du client LLM |
 | `SMTP_*` | Emails de moderation |
+| `ANAPEC_EMPLOI_MAX_PAGES` | Nombre de pages recentes synchronisees en mode normal (`20` par defaut, `0`/`all` pour scan complet) |
 | `CORS_ORIGINS` | Origines CORS |
 | `CORS_ORIGIN_REGEX` | Regex CORS reseau local |
 

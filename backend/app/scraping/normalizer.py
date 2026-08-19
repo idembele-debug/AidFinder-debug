@@ -100,6 +100,12 @@ def generate_content_hash(record):
     f"{record.get('montant','')}"
     f"{record.get('region_cible','')}"
     f"{record.get('niveau_etude_requis','')}"
+    f"{record.get('statut_socio_pro_requis','')}"
+    f"{record.get('url_officielle','')}"
+    f"{record.get('reference_offre','')}"
+    f"{record.get('entreprise_nom','')}"
+    f"{record.get('date_publication','')}"
+    f"{record.get('lieu_travail','')}"
 )
     return hashlib.sha256(content.encode()).hexdigest()
 
@@ -126,6 +132,11 @@ def normalize_record(data):
         "handicap_requis": normalize_boolean(data.get("handicap_requis")),
         "url_officielle": normalize_text(data.get("url_officielle")),
         "image_url": normalize_text(data.get("image_url")),
+        "source_record_id": normalize_text(data.get("source_record_id")),
+        "reference_offre": normalize_text(data.get("reference_offre")),
+        "entreprise_nom": normalize_text(data.get("entreprise_nom")),
+        "date_publication": normalize_date(data.get("date_publication")),
+        "lieu_travail": normalize_text(data.get("lieu_travail")),
     }
 
     normalized["content_hash"] = generate_content_hash(normalized)
