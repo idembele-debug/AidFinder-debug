@@ -1,12 +1,19 @@
 # Node modules
 node_modules/
+node_modules 2/
+dist/
 
 # Python
 venv/
 __pycache__/
+*.py[cod]
 
 # Environment
 .env
 
 # Mac
 .DS_Store
+
+# Runtime artifacts
+*.log
+uploads/

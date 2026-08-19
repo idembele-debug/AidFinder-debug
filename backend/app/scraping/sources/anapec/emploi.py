@@ -12,8 +12,7 @@ Fonctionnement :
     vers l'endpoint Livewire 3 /livewire-.../update.
   - Le point d'entrée unique et exclusif est https://anapec.ma.
 
-Architecture calquée sur news.py, compatible avec manager.py,
-scheduler.py, storage.py, normalizer.py, utils.py et BaseScraper.
+Compatible avec manager.py, scheduler.py, storage.py, normalizer.py et utils.py.
 """
 
 from app.scraping.utils import (

@@ -23,7 +23,7 @@ function StatCard({ label, value, icon: Icon, colorClass, bgClass }) {
   )
 }
 
-function BarChart({ items, label, color = 'var(--color-brand)' }) {
+function BarChart({ items, color = 'var(--color-brand)' }) {
   if (!items || items.length === 0) return (
     <p className="py-8 text-center text-sm text-muted-foreground">Aucune donnée disponible.</p>
   )
@@ -212,13 +212,13 @@ export default function AdminDashboard() {
           {/* Aides par catégorie */}
           <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold text-foreground">Aides par catégorie</h3>
-            <BarChart items={stats.aides_par_categorie} label="categories" color="#10b981" />
+            <BarChart items={stats.aides_par_categorie} color="#10b981" />
           </div>
 
           {/* Aides par région */}
           <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold text-foreground">Aides par région</h3>
-            <BarChart items={stats.aides_par_region} label="regions" color="#0ea5e9" />
+            <BarChart items={stats.aides_par_region} color="#0ea5e9" />
           </div>
 
           {/* Évolution utilisateurs */}
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
           {/* Sources les plus utilisées */}
           <div className="rounded-xl border border-border/60 bg-card p-6 shadow-sm lg:col-span-2">
             <h3 className="mb-4 text-base font-bold text-foreground">Sources les plus utilisées</h3>
-            <BarChart items={stats.sources_les_plus_utilisees} label="sources" color="#a855f7" />
+            <BarChart items={stats.sources_les_plus_utilisees} color="#a855f7" />
           </div>
         </div>
       )}

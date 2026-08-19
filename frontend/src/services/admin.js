@@ -82,26 +82,9 @@ export const adminService = {
     return data
   },
 
-  // ─── Sources ─────────────────────────────────────────────────────────────────
-  getSources: async () => {
-    const { data } = await api.get('/admin/sources')
-    return data
-  },
-
-  runScraping: async (sourceId) => {
-    const { data } = await api.post(`/admin/sources/${sourceId}/scraping`)
-    return data
-  },
-
   // ─── Statistiques ─────────────────────────────────────────────────────────────
   getStatistics: async () => {
     const { data } = await api.get('/admin/statistiques')
-    return data
-  },
-
-  // ─── Logs ────────────────────────────────────────────────────────────────────
-  getLogs: async () => {
-    const { data } = await api.get('/admin/logs')
     return data
   },
 }

@@ -2,10 +2,7 @@ from dotenv import load_dotenv
 import os
 
 # charge le fichier environnement .env
-loaded = load_dotenv()
-print(f"[CONFIG] load_dotenv() a trouvé .env ? {loaded}")
-print(f"[CONFIG] OPENROUTER_API_KEY = |{os.getenv('OPENROUTER_API_KEY', 'NON_TROUVÉ')}|")
-print(f"[CONFIG] OPENROUTER_MODEL  = |{os.getenv('OPENROUTER_MODEL', 'NON_TROUVÉ')}|")
+load_dotenv()
 
 # ─── Dify ───────────────────────────────────────────────
 

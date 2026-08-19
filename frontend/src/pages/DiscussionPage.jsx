@@ -117,7 +117,7 @@ export default function DiscussionPage() {
   const [chatInputVal, setChatInputVal] = useState('')
 
   // États dynamiques du chatbot
-  const [questionActuelle, setQuestionActuelle] = useState(null)
+  const [, setQuestionActuelle] = useState(null)
   const [suggestions, setSuggestions] = useState([])
   const [recommendations, setRecommendations] = useState([])
   const [selectedAid, setSelectedAid] = useState(null)
