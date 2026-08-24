@@ -5,7 +5,7 @@ from time import perf_counter
 from app.core.datetime_utils import utc_now
 from app.database.database import SessionLocal
 from app.models.scraping_logs import ScrapingLog
-from app.scraping.sources.anapec import scrape_emploi, scrape_news
+from app.scraping.sources.anapec import scrape_emploi
 from app.scraping.sources.anapec.emploi import get_last_metrics
 from app.scraping.storage import save_records
 
@@ -16,12 +16,6 @@ SCRAPERS = {
         "scraper": scrape_emploi,
         "deactivate_missing": True,
         "metrics": get_last_metrics,
-    },
-    "anapec_news": {
-        "label": "ANAPEC",
-        "scraper": scrape_news,
-        "deactivate_missing": False,
-        "metrics": lambda: {},
     },
 }
 

@@ -5,7 +5,10 @@ dist/
 
 # Python
 venv/
+venv 2/
 __pycache__/
+__pycache__ 2/
+__pycache__ 3/
 *.py[cod]
 
 # Environment
@@ -17,3 +20,5 @@ __pycache__/
 # Runtime artifacts
 *.log
 uploads/
+.pytest_cache/
+*.pytest_cache

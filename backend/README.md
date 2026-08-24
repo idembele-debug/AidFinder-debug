@@ -13,7 +13,7 @@ API FastAPI de AidFinder. Elle gere l'authentification, les profils, les dashboa
 - Generation principale des reponses via Dify (`response_generator.py` -> `dify_client.py`).
 - `conversation_brain.py` utilise encore `llm_client.py` pour certaines analyses/extractions.
 - Administration des utilisateurs, aides, sources, logs et statistiques.
-- Scraping ANAPEC des offres d'emploi conserve.
+- Scraping ANAPEC des offres d'emploi conserve (source active et unique).
 - Scheduler de scraping toutes les 6 heures.
 
 ## Structure
@@ -77,7 +77,6 @@ backend/
       storage.py
       utils.py
       sources/anapec/emploi.py
-      sources/anapec/news.py
     main.py
     create_tables.py
   tests/
@@ -138,9 +137,8 @@ Les routers dashboard et admin sont aussi montes sous `/api` pour compatibilite.
 
 `app.scraping.scheduler.start_scheduler()` est lance au demarrage par FastAPI. Il execute `run_all_scrapers()` immediatement puis toutes les 6 heures.
 
-- `sources/anapec/emploi.py`: scraper ANAPEC offres d'emploi, a conserver.
-- `sources/anapec/news.py`: scraper actualites ANAPEC encore reference par le manager, non prioritaire.
-- `storage.py`: normalisation, deduplication et insertion/mise a jour des aides.
+- `sources/anapec/emploi.py`: scraper ANAPEC **offres d'emploi** (seule source de scraping active). Le scraper d'actualites ANAPEC (`news.py`) a ete supprime.
+- `storage.py`: normalisation, deduplication (par `source_record_id` puis `content_hash`, avec index unique sur `source_record_id`) et insertion/mise a jour des aides.
 - `scraping_logs.py`: journalisation en base.
 
 ## Chatbot

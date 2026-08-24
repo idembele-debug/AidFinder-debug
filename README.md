@@ -25,9 +25,9 @@ backend/ FastAPI + SQLAlchemy
 - Extraction/analyse conversationnelle encore appuyee par `llm_client` quand necessaire.
 - Administration des utilisateurs, aides et statistiques.
 - Routes backend de sources/logs scraping conservees.
-- Scraping ANAPEC des offres d'emploi conserve et planifie.
+- Scraping ANAPEC **offres d'emploi** conserve et planifie (source de scraping active et unique).
 
-Le chatbot existe, mais il n'est pas considere comme termine. Le scraping des actualites ANAPEC existe encore dans le backend, car il est reference par le manager, mais les offres d'emploi ANAPEC sont la donnee de scraping prioritaire.
+Le scraping des actualites ANAPEC a ete supprime : seul le scraping des offres d'emploi ANAPEC est conserve. Le chatbot existe et genere ses reponses via Dify, mais il n'est pas considere comme termine.
 
 ## Structure
 
@@ -119,7 +119,7 @@ Frontend: voir `frontend/.env.example`.
 
 ## Scraping
 
-Le scheduler backend lance `app.scraping.manager.run_all_scrapers()` au demarrage puis toutes les 6 heures. Le scraper ANAPEC offres d'emploi (`app/scraping/sources/anapec/emploi.py`) est conserve. Le scraper actualites ANAPEC reste present, car il est encore reference par le manager, mais il n'est pas prioritaire fonctionnellement.
+Le scheduler backend lance `app.scraping.manager.run_all_scrapers()` au demarrage puis toutes les 6 heures. La seule source de scraping active est **ANAPEC offres d'emploi** (`app/scraping/sources/anapec/emploi.py`). Le scraper d'actualites ANAPEC (`news.py`) a ete supprime.
 
 ## Validation
 
