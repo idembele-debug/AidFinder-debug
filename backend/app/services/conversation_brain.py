@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 from datetime import date
@@ -11,7 +10,6 @@ from app.services.conversation_engine import (
     IntentCategory,
     StateMachine,
 )
-from app.services.llm_client import llm_client
 
 logger = logging.getLogger("aidfinder.conversation_brain")
 
@@ -103,7 +101,12 @@ class ProfileCollector:
 
     EXTRACTION_PATTERNS: dict[str, re.Pattern] = {
         "ville": re.compile(
-            r"(?:j['\"]habite\s*(?:à|dans?|sur|près\s*de)\s*)([\w\s\-']+?)(?:\.|,|\s*et|\s*je|$)",
+            r"(?:"
+            r"j['\"]?habite\s+(?:à|dans|sur|près\s*de)\s+"
+            r"|je\s+(?:vis|suis|travaille|recherche)\s+(?:à\s+)?"
+            r"|je\s+cherche\s+(?:une\s+aide|un\s+emploi|un\s+logement|une\s+offre|du\s+travail)\s+(?:à\s+|dans\s+)?"
+            r")"
+            r"(Casablanca|Rabat|Tanger|Tétouan|Tetouan|Fès|Fes|Marrakech|Agadir|Oujda|Meknès|Meknes|Kenitra|Kénitra|Salé|Sale|Mohammedia|El\s*Jadida|Nador|Beni\s*Mellal|Laâyoune|Laayoune|Errachidia)",
             re.I,
         ),
         "region": re.compile(
@@ -182,6 +185,40 @@ class ProfileCollector:
         "handicap": ["Oui", "Non"],
     }
 
+    # Champs bloquants : âge + localisation (ville OU région).
+    BLOCKING_AGE_FIELD = "age"
+    BLOCKING_LOCATION_FIELDS = ("ville", "region")
+    COLLECT_ORDER = ("ville", "age")
+    AFFINAGE_FIELDS = ("niveau_etude", "statut_socio_pro", "handicap")
+
+    # Mapping fiable ville -> région (ne jamais inventer pour une ville inconnue).
+    VILLE_TO_REGION = {
+        "casablanca": "Casablanca-Settat",
+        "rabat": "Rabat-Salé-Kénitra",
+        "sale": "Rabat-Salé-Kénitra",
+        "kénitra": "Rabat-Salé-Kénitra",
+        "kenitra": "Rabat-Salé-Kénitra",
+        "fes": "Fès-Meknès",
+        "fès": "Fès-Meknès",
+        "meknes": "Fès-Meknès",
+        "meknès": "Fès-Meknès",
+        "marrakech": "Marrakech-Safi",
+        "agadir": "Souss-Massa",
+        "tanger": "Tanger-Tétouan-Al Hoceïma",
+        "tétouan": "Tanger-Tétouan-Al Hoceïma",
+        "oujda": "Oriental",
+        "nador": "Oriental",
+    }
+
+    # Refus explicites uniquement.
+    REFUSAL_PATTERNS = re.compile(
+        r"(je\s+(?:(?:ne\s+)?(?:veux|souhaite|préfère)\s+pas|refuse)"
+        r"|je\s+ne\s+(?:veux|souhaite|peux)\s+(?:pas|point)"
+        r"|pas\s+(?:donner|dire|répondre)\s+(?:mon|.*)?(?:âge|age)"
+        r"|on\s+peut\s+(?:passer|éviter)|sans\s+importance)",
+        re.I,
+    )
+
     def extract(self, message: str) -> dict[str, Any]:
         extracted: dict[str, Any] = {}
         for field, pattern in self.EXTRACTION_PATTERNS.items():
@@ -200,32 +237,6 @@ class ProfileCollector:
             else:
                 extracted[field] = match.group(0).strip().capitalize()
         return extracted
-
-    def extract_with_llm(self, message: str) -> dict[str, Any]:
-        if not llm_client.is_available:
-            return {}
-        prompt = (
-            "Tu es un extracteur d'informations. Extrais les données suivantes "
-            "du message utilisateur.\n"
-            "Champs possibles : ville, region, niveau_etude, statut_socio_pro, age, handicap\n"
-            "Retourne UNIQUEMENT un objet JSON valide avec les champs trouvés.\n"
-            "Si un champ n'est pas trouvé, ne l'inclus pas dans le JSON.\n"
-            "Ne mets JAMAIS de texte avant ou après le JSON.\n\n"
-            f"Message : {message}\n\n"
-            "JSON :"
-        )
-        result = llm_client.generate([{"role": "user", "content": prompt}])
-        if not result:
-            return {}
-        try:
-            cleaned = result.strip()
-            if cleaned.startswith("```"):
-                cleaned = cleaned.strip("`").strip()
-                if cleaned.startswith("json"):
-                    cleaned = cleaned[4:].strip()
-            return json.loads(cleaned)
-        except (json.JSONDecodeError, TypeError):
-            return {}
 
     def is_complete(self, profile: dict) -> bool:
         return all(
@@ -254,6 +265,45 @@ class ProfileCollector:
         return self.SUGGESTIONS.get(field, [])
 
 
+    def infer_region(self, ville: str | None) -> str | None:
+        """Déduit la région depuis une ville via un mapping fiable (sinon None)."""
+        if not ville:
+            return None
+        key = ville.strip().casefold()
+        if key in self.VILLE_TO_REGION:
+            return self.VILLE_TO_REGION[key]
+        for v, region in self.VILLE_TO_REGION.items():
+            if v in key:
+                return region
+        return None
+
+    def location_known(self, profile: dict) -> bool:
+        return bool(profile.get("ville")) or bool(profile.get("region"))
+
+    def age_known(self, profile: dict) -> bool:
+        return profile.get("age") is not None or profile.get("age_refused") is True
+
+    def is_sufficient_for_recommendation(self, profile: dict) -> bool:
+        return self.location_known(profile) and self.age_known(profile)
+
+    def missing_blocking_fields(self, profile: dict) -> list[str]:
+        missing = []
+        if not self.location_known(profile):
+            missing.append("ville")
+        if not self.age_known(profile):
+            missing.append("age")
+        return missing
+
+    def next_blocking_field(self, profile: dict) -> str | None:
+        for field in self.COLLECT_ORDER:
+            if field in self.missing_blocking_fields(profile):
+                return field
+        return None
+
+    def detects_age_refusal(self, message: str) -> bool:
+        return bool(self.REFUSAL_PATTERNS.search(message))
+
+
 class ConversationBrain:
     def __init__(self) -> None:
         self.intent_detector = IntentDetector()
@@ -273,38 +323,60 @@ class ConversationBrain:
 
         intent = self.intent_detector.detect(user_message, conversation_meta)
         extracted = self.profile_collector.extract(user_message)
+
+        # Si la ville est connue et la région absente, on déduit la région via
+        # un mapping fiable uniquement (ne jamais inventer pour une ville inconnue).
+        if extracted.get("ville") and not extracted.get("region"):
+            inferred = self.profile_collector.infer_region(extracted["ville"])
+            if inferred:
+                extracted["region"] = inferred
+
+        # Refus explicite de l'âge : mémoriser pour ne pas redemander indéfiniment.
+        if self.profile_collector.detects_age_refusal(user_message):
+            extracted["age_refused"] = True
+
         merged = self._merge_profiles(user_profile, conversation_meta.collected_fields, extracted)
         profile_complete = self.profile_collector.is_complete(merged)
         new_state = self.state_machine.next_state(
             conversation_meta.state, intent, profile_complete
         )
 
+        # Champs bloquants réellement manquants (localisation + âge uniquement).
+        blocking_missing = self.profile_collector.missing_blocking_fields(merged)
+        field_to_ask = self.profile_collector.next_blocking_field(merged)
+
+        social_intent = intent in {
+            IntentCategory.GREETING,
+            IntentCategory.HOW_ARE_YOU,
+            IntentCategory.THANKS,
+            IntentCategory.GOODBYE,
+            IntentCategory.HELP,
+        }
+        should_ask_question = bool(blocking_missing) and not social_intent
+
         logger.info("[DECIDE] Résultat — intent=%s | new_state=%s | "
-                     "extracted=%s | profil_complet=%s | champs_manquants=%s",
+                     "extracted=%s | profil_complet=%s | bloquants_manquants=%s | field_to_ask=%s",
                      intent.value, new_state.value,
-                     extracted, profile_complete,
-                     self.profile_collector.missing_fields(merged))
+                     extracted, profile_complete, blocking_missing, field_to_ask)
 
         return ConversationDecision(
             intent=intent,
             new_state=new_state,
-            # The LLM decides whether to ask questions — not the state machine
-            should_ask_question=False,
-            field_to_ask=None,
+            should_ask_question=should_ask_question,
+            field_to_ask=field_to_ask,
             extracted_info=extracted,
             merged_profile=merged,
-            # LLM also decides when clarification is needed
             clarification_needed=False,
         )
 
-    def should_recommend_after_response(
+    def should_recommend(
         self,
         meta: ConversationMeta,
         merged_profile: dict,
         intent: IntentCategory | None = None,
     ) -> bool:
         """
-        Décide si des recommandations doivent être calculées APRÈS que le LLM a répondu.
+        Décide si des recommandations doivent être calculées (avant l'appel Dify).
         Basé sur :
         - Le profil est complet (tous les champs requis sont remplis)
         - Les recommandations n'ont pas déjà été montrées
@@ -313,9 +385,9 @@ class ConversationBrain:
         if meta.recommendation_shown:
             logger.info("[RECOMMEND_CHECK] Déjà montré — skip")
             return False
-        if not self.profile_collector.is_complete(merged_profile):
-            logger.info("[RECOMMEND_CHECK] Profil incomplet — champs manquants: %s",
-                         self.profile_collector.missing_fields(merged_profile))
+        if not self.profile_collector.is_sufficient_for_recommendation(merged_profile):
+            logger.info("[RECOMMEND_CHECK] Profil insuffisant — bloquants manquants: %s",
+                         self.profile_collector.missing_blocking_fields(merged_profile))
             return False
         # Ne pas recommander si l'intention est purement sociale
         if intent and intent in {

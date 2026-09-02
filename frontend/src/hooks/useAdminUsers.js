@@ -21,28 +21,5 @@ export default function useAdminUsers() {
 
   useEffect(() => { fetch() }, [fetch])
 
-  const activateUser = useCallback(async (userId) => {
-    const updated = await adminService.activateUser(userId)
-    setUsers((prev) => prev.map((u) => (u.user_id === userId ? updated : u)))
-    return updated
-  }, [])
-
-  const deactivateUser = useCallback(async (userId) => {
-    const updated = await adminService.deactivateUser(userId)
-    setUsers((prev) => prev.map((u) => (u.user_id === userId ? updated : u)))
-    return updated
-  }, [])
-
-  const deleteUser = useCallback(async (userId) => {
-    await adminService.deleteUser(userId)
-    setUsers((prev) => prev.filter((u) => u.user_id !== userId))
-  }, [])
-
-  const updateUser = useCallback(async (userId, payload) => {
-    const updated = await adminService.updateUser(userId, payload)
-    setUsers((prev) => prev.map((u) => (u.user_id === userId ? updated : u)))
-    return updated
-  }, [])
-
-  return { users, loading, error, refresh: fetch, activateUser, deactivateUser, deleteUser, updateUser }
+  return { users, loading, error, refresh: fetch }
 }

@@ -5,7 +5,7 @@ from app.routes.admin import router as admin_router
 from app.routes.dashboard import router as dashboard_router
 from app.routes.home import router as home_router
 from app.routes.users import router as users_router
-from app.core.config import CORS_ORIGINS, CORS_ORIGIN_REGEX
+from app.core.config import CORS_ORIGINS, CORS_ORIGIN_REGEX, UPLOAD_DIR
 from fastapi.staticfiles import StaticFiles
 import os, threading
 from app.scraping.scheduler import start_scheduler
@@ -29,12 +29,10 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(home_router)
 app.include_router(dashboard_router)
-app.include_router(dashboard_router, prefix="/api")
 app.include_router(admin_router)
-app.include_router(admin_router, prefix="/api")
 
-os.makedirs("uploads/profiles", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+os.makedirs(UPLOAD_DIR / "profiles", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 @app.get("/")
 def home():
     return {"message": "Bienvenue sur AidFinder"}

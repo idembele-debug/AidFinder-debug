@@ -44,7 +44,6 @@ function StreamingCursor() {
  */
 export default function ConversationBubble({ msg, isStreaming = false }) {
   const isBot = msg.sender === 'assistant'
-  const lines = msg.text.split('\n')
 
   return (
     <motion.div
@@ -62,10 +61,10 @@ export default function ConversationBubble({ msg, isStreaming = false }) {
         </div>
       )}
 
-      <div className={`flex flex-col gap-1 max-w-[82%] ${isBot ? 'items-start' : 'items-end'}`}>
+      <div className={`flex flex-col gap-1 max-w-[82%] min-w-0 ${isBot ? 'items-start' : 'items-end'}`}>
         {/* Bulle texte */}
         <div
-          className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs ${
+          className={`min-w-0 whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs ${
             isBot
               ? msg.isError
                 ? 'bg-destructive/10 text-destructive border border-destructive/20 rounded-tl-none'
@@ -73,12 +72,7 @@ export default function ConversationBubble({ msg, isStreaming = false }) {
               : 'bg-brand text-brand-foreground rounded-br-none'
           }`}
         >
-          {lines.map((line, i) => (
-            <span key={i}>
-              {line}
-              {i < lines.length - 1 && <br />}
-            </span>
-          ))}
+          {msg.text}
           {/* Curseur clignotant uniquement sur la bulle IA pendant le streaming */}
           {isBot && isStreaming && <StreamingCursor />}
         </div>

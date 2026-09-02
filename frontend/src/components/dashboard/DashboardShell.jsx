@@ -42,7 +42,7 @@ export default function DashboardShell({
         {sidebar({ onNavigate: closeSidebar })}
       </aside>
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b border-border px-4 lg:hidden">
           <div className="flex items-center">
             <button
@@ -59,7 +59,7 @@ export default function DashboardShell({
         </header>
 
         <main
-          className={`flex flex-1 flex-col transition-opacity duration-300 ${
+          className={`flex min-w-0 flex-1 flex-col transition-opacity duration-300 ${
             dimmed ? 'pointer-events-none opacity-40' : ''
           }`}
         >

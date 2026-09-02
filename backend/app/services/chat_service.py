@@ -47,6 +47,19 @@ def _clean_text(value: Any, limit: int | None = None) -> str:
     return text
 
 
+def _preserve_text(value: Any, limit: int | None = None) -> str:
+    """Tronque un texte en conservant espaces et retours à la ligne.
+
+    Contrairement à `_clean_text`, cette fonction n'aplatit pas les sauts
+    de ligne : les paragraphes et listes à puces produits par le bot sont
+    préservés tels quels. Seule la limite de caractères est appliquée.
+    """
+    text = str(value or "")
+    if limit is not None and len(text) > limit:
+        return f"{text[:limit].rstrip()}..."
+    return text
+
+
 def _calculate_age(date_naissance: date | None) -> int | None:
     if date_naissance is None:
         return None
@@ -213,34 +226,21 @@ class ChatService:
         history = self.memory.load_recent_messages(db, history_item)
         logger.info("[HANDLE] Historique chargé: %d messages", len(history))
 
-        # Step 1: Generate LLM response WITHOUT recommendations
-        # The LLM responds naturally — it may ask questions, discuss, etc.
-        logger.info("[HANDLE] ÉTAPE 1 — Génération de la réponse LLM initiale (sans recommendations)")
-        first_response = response_generator.generate(
-            decision,
-            meta,
-            clean_message,
-            history=history,
-            recommendations=None,
-        )
-        logger.info("[HANDLE] ÉTAPE 1 terminée — réponse=%s...", first_response[:100])
-
-        # Step 2: After LLM has responded, check if we should compute recommendations
+        # Step 1: Décider si des recommandations sont nécessaires (avant l'appel Dify)
         recommendations = None
-        should_recommend = self.brain.should_recommend_after_response(
+        should_recommend = self.brain.should_recommend(
             meta, decision.merged_profile, intent=decision.intent
         )
-        logger.info("[HANDLE] ÉTAPE 2 — Vérification post-réponse: should_recommend=%s | "
-                     "recommendation_shown=%s | profil_complet=%s",
+        logger.info("[HANDLE] ÉTAPE 1 — should_recommend=%s | recommendation_shown=%s | profil_complet=%s",
                      should_recommend, meta.recommendation_shown,
                      self.brain.profile_collector.is_complete(decision.merged_profile))
 
         if should_recommend:
-            logger.info("[HANDLE] ÉTAPE 2 — Calcul des recommendations...")
+            logger.info("[HANDLE] ÉTAPE 1 — Calcul des recommendations...")
             recommendations = recommendation_engine.get_recommendations(
                 db, decision.merged_profile, limit=5
             )
-            logger.info("[HANDLE] ÉTAPE 2 — %d recommendation(s) trouvée(s)",
+            logger.info("[HANDLE] ÉTAPE 1 — %d recommendation(s) trouvée(s)",
                          len(recommendations) if recommendations else 0)
 
             if recommendations:
@@ -251,23 +251,17 @@ class ChatService:
                 logger.info("[HANDLE] Recommendations enregistrées: %s",
                              [r["aide_id"] for r in recommendations])
 
-                # Step 3: Generate enriched response that naturally includes recommendations
-                logger.info("[HANDLE] ÉTAPE 3 — Enrichissement de la réponse avec les recommendations")
-                bot_text = response_generator.generate_enriched(
-                    decision,
-                    meta,
-                    clean_message,
-                    first_response,
-                    history=history,
-                    recommendations=recommendations,
-                )
-                logger.info("[HANDLE] ÉTAPE 3 terminée — réponse enrichie=%s...", bot_text[:100])
-            else:
-                logger.info("[HANDLE] Aucune recommendation trouvée — utilisation de la réponse initiale")
-                bot_text = first_response
-        else:
-            logger.info("[HANDLE] Pas de recommendations nécessaires — utilisation réponse initiale")
-            bot_text = first_response
+        # Step 2: UN SEUL appel Dify (profil + contexte + recommandations si présentes)
+        logger.info("[HANDLE] ÉTAPE 2 — Génération de la réponse Dify (avec recommendations=%s)",
+                     "oui" if recommendations else "non")
+        bot_text = response_generator.generate(
+            decision,
+            meta,
+            clean_message,
+            history=history,
+            recommendations=recommendations,
+        )
+        logger.info("[HANDLE] ÉTAPE 2 terminée — réponse=%s...", bot_text[:100])
 
         try:
             user_msg = Discussion(
@@ -300,9 +294,14 @@ class ChatService:
             db.rollback()
             raise
 
-        missing_fields = (
-            self.brain.profile_collector.missing_fields(decision.merged_profile)
+        # Champs bloquants manquants uniquement (localisation + âge) et question associée.
+        missing_blocking = (
+            self.brain.profile_collector.missing_blocking_fields(decision.merged_profile)
         )
+        if decision.field_to_ask:
+            question_actuelle = self.brain.profile_collector.get_question(decision.field_to_ask)
+        else:
+            question_actuelle = None
 
         # Dynamic suggestions
         suggestions = _compute_dynamic_suggestions(
@@ -327,7 +326,8 @@ class ChatService:
             },
             "aides_recommandees": recommendations or [],
             "conversation_state": meta.state.value,
-            "champs_manquants": missing_fields,
+            "champs_manquants": missing_blocking,
+            "question_actuelle": question_actuelle,
             "suggestions": suggestions,
         }
 
@@ -394,36 +394,20 @@ class ChatService:
         db.flush()
 
         try:
-            # Step 1: Buffer the first LLM response (no recommendations)
-            logger.info("[STREAM] ÉTAPE 1 — Bufferisation de la réponse LLM initiale")
-            first_chunks: list[str] = []
-            async for chunk in response_generator.generate_stream(
-                decision,
-                meta,
-                clean_message,
-                history=history,
-                recommendations=None,
-            ):
-                first_chunks.append(chunk)
-
-            first_response = "".join(first_chunks)
-            logger.info("[STREAM] ÉTAPE 1 terminée — %d chunks bufferisés (%d caractères)",
-                         len(first_chunks), len(first_response))
-
-            # Step 2: After LLM has responded, check if we should compute recommendations
+            # Step 1: Decider si des recommandations necessaires (avant appel Dify)
             recommendations = None
-            should_recommend = self.brain.should_recommend_after_response(
+            should_recommend = self.brain.should_recommend(
                 meta, decision.merged_profile, intent=decision.intent
             )
-            logger.info("[STREAM] ÉTAPE 2 — should_recommend=%s | recommendation_shown=%s",
+            logger.info("[STREAM] ÉTAPE 1 — should_recommend=%s | recommendation_shown=%s",
                          should_recommend, meta.recommendation_shown)
 
             if should_recommend:
-                logger.info("[STREAM] ÉTAPE 2 — Calcul des recommendations...")
+                logger.info("[STREAM] ÉTAPE 1 — Calcul des recommendations...")
                 recommendations = recommendation_engine.get_recommendations(
                     db, decision.merged_profile, limit=5
                 )
-                logger.info("[STREAM] ÉTAPE 2 — %d recommendation(s) trouvée(s)",
+                logger.info("[STREAM] ÉTAPE 1 — %d recommendation(s) trouvée(s)",
                              len(recommendations) if recommendations else 0)
 
                 if recommendations:
@@ -432,36 +416,24 @@ class ChatService:
                         r["aide_id"] for r in recommendations
                     ]
 
-                    # Step 3: Stream the enriched response
-                    logger.info("[STREAM] ÉTAPE 3 — Streaming de la réponse enrichie")
-                    enriched_chunks: list[str] = []
-                    async for chunk in response_generator.generate_enriched_stream(
-                        decision,
-                        meta,
-                        clean_message,
-                        first_response,
-                        history=history,
-                        recommendations=recommendations,
-                    ):
-                        enriched_chunks.append(chunk)
-                        yield {"type": "chunk", "data": chunk}
+            # Step 2: UN SEUL appel Dify stream → on transmet les chunks au frontend
+            full_chunks: list[str] = []
+            async for chunk in response_generator.generate_stream(
+                decision,
+                meta,
+                clean_message,
+                history=history,
+                recommendations=recommendations,
+            ):
+                yield {"type": "chunk", "data": chunk}
+                full_chunks.append(chunk)
 
-                    full_text = "".join(enriched_chunks)
-                    logger.info("[STREAM] ÉTAPE 3 terminée — %d chunks enrichis (%d caractères)",
-                                 len(enriched_chunks), len(full_text))
-                else:
-                    logger.info("[STREAM] Aucune recommendation — streaming réponse initiale")
-                    for chunk in first_chunks:
-                        yield {"type": "chunk", "data": chunk}
-                    full_text = first_response
-            else:
-                logger.info("[STREAM] Pas de recommendations — streaming réponse initiale")
-                for chunk in first_chunks:
-                    yield {"type": "chunk", "data": chunk}
-                full_text = first_response
+            full_text = "".join(full_chunks)
+            logger.info("[STREAM-2] ÉTAPE 2 terminée — %d chunks streamés (%d caractères)",
+                         len(full_chunks), len(full_text))
 
             # Save message & recommendations
-            bot_msg.contenu = _clean_text(full_text, MAX_RESPONSE_CHARS)
+            bot_msg.contenu = _preserve_text(full_text, MAX_RESPONSE_CHARS)
             history_item.conversation_meta = meta.to_json()
             history_item.date_derniere_activite = utc_now()
 
@@ -477,10 +449,14 @@ class ChatService:
             db.commit()
             db.refresh(history_item)
 
-            # Build metadata
-            missing_fields = (
-                self.brain.profile_collector.missing_fields(decision.merged_profile)
+            # Build metadata — champs bloquants manquants uniquement (localisation + âge).
+            missing_blocking = (
+                self.brain.profile_collector.missing_blocking_fields(decision.merged_profile)
             )
+            if decision.field_to_ask:
+                question_actuelle = self.brain.profile_collector.get_question(decision.field_to_ask)
+            else:
+                question_actuelle = None
             suggestions = _compute_dynamic_suggestions(
                 decision, meta, user, recommendations
             )
@@ -505,7 +481,8 @@ class ChatService:
                     },
                     "aides_recommandees": recommendations or [],
                     "conversation_state": meta.state.value,
-                    "champs_manquants": missing_fields,
+                    "champs_manquants": missing_blocking,
+                    "question_actuelle": question_actuelle,
                     "suggestions": suggestions,
                 },
             }

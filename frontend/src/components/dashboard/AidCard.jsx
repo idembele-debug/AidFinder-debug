@@ -118,8 +118,9 @@ export default function AidCard({ aid, index = 0, historiqueId = null, onShowDet
     } catch (err) {
       console.error("Erreur enregistrement consultation:", err)
     } finally {
-      if (aid.url_officielle) {
-        window.open(aid.url_officielle, '_blank', 'noopener,noreferrer')
+      const externalUrl = aid.url_officielle ?? aid.lien_officiel
+      if (externalUrl) {
+        window.open(externalUrl, '_blank', 'noopener,noreferrer')
       } else if (onShowDetail) {
         onShowDetail(aid)
       }

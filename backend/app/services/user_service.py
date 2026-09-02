@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 
 from fastapi import UploadFile
 import shutil, os
+from app.core.config import PROFILES_DIR
 
 def get_user_profile(current_user: Utilisateur):
     return current_user
@@ -68,11 +69,12 @@ def change_user_password(db: Session, current_user: Utilisateur, data: ChangePas
     return {"message": "Mot de passe mis à jour avec succès."}
 
 def upload_profile_photo(db: Session, current_user: Utilisateur, file: UploadFile):
-    # supprimer l'ancienne photo si elle existe
+    # supprimer l'ancienne photo si elle existe (résolu par rapport au backend)
     if current_user.photo_profil:
-        old_file = current_user.photo_profil.lstrip("/") # enlever le slash initial
-        if os.path.exists(old_file):
-            os.remove(old_file)
+        old_basename = os.path.basename(current_user.photo_profil)
+        old_file = PROFILES_DIR / old_basename
+        if old_file.exists():
+            old_file.unlink()
             
     # Vérifier si le fichier est une image
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -95,14 +97,14 @@ def upload_profile_photo(db: Session, current_user: Utilisateur, file: UploadFil
     
     filename = f"user_{current_user.user_id}.{extension}"
     
-    # Chemin physique sur le disque
-    file_path = os.path.join("uploads", "profiles", filename)
+    # Chemin physique sur le disque (résolu par rapport au backend)
+    file_path = PROFILES_DIR / filename
 
-    # Chemin qui sera enregistré en base
+    # Chemin qui sera enregistré en base (relatif au montage /uploads)
     db_path = f"/uploads/profiles/{filename}"
 
     # Créer le dossier si nécessaire
-    os.makedirs("uploads/profiles", exist_ok=True)
+    os.makedirs(PROFILES_DIR, exist_ok=True)
 
     # Sauvegarder l'image
     with open(file_path, "wb") as buffer:

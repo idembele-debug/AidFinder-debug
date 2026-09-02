@@ -1,18 +1,10 @@
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, Field, field_serializer
 
 from app.core.datetime_utils import as_utc
 from app.schemas.dashboard import DashboardAidResponse
-
-
-class ConversationState(str, Enum):
-    GREETING = "GREETING"
-    COLLECTING_INFO = "COLLECTING_INFO"
-    RECOMMENDING = "RECOMMENDING"
-    DISCUSSING = "DISCUSSING"
-    CLARIFYING = "CLARIFYING"
+from app.services.conversation_engine import ConversationState
 
 
 class ChatMessageRequest(BaseModel):

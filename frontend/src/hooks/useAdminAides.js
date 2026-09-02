@@ -38,17 +38,11 @@ export default function useAdminAides() {
     setAides((prev) => prev.filter((a) => a.aide_id !== aideId))
   }, [])
 
-  const updateAide = useCallback(async (aideId, payload) => {
-    const updated = await adminService.updateAide(aideId, payload)
-    setAides((prev) => prev.map((a) => (a.aide_id === aideId ? updated : a)))
-    return updated
-  }, [])
-
   const createAide = useCallback(async (payload) => {
     const created = await adminService.createAide(payload)
     setAides((prev) => [created, ...prev])
     return created
   }, [])
 
-  return { aides, loading, error, refresh: fetch, activateAide, deactivateAide, deleteAide, updateAide, createAide }
+  return { aides, loading, error, refresh: fetch, activateAide, deactivateAide, deleteAide, createAide }
 }

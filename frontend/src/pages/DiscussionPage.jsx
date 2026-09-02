@@ -135,23 +135,48 @@ export default function DiscussionPage() {
   const sending = isThinking || isStreaming
 
   const messagesEndRef = useRef(null)
+  // Conteneur scrollable — utilisé pour détecter la proximité du bas
+  const messagesContainerRef = useRef(null)
+
+  // Seuil (px) sous lequel l'utilisateur est considéré "proche du bas"
+  const SCROLL_NEAR_BOTTOM_THRESHOLD = 120
 
   /* ── Auto-scroll ── */
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  // Vrai si l'utilisateur est déjà proche du bas de la zone scrollable
+  const isNearBottom = useCallback(() => {
+    const el = messagesContainerRef.current
+    if (!el) return true
+    return el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_NEAR_BOTTOM_THRESHOLD
   }, [])
 
-  // Scroll quand les messages changent, quand on attend, ou quand les suggestions arrivent
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, isThinking, suggestions, scrollToBottom])
-
-  // Scroll continu pendant l'écriture progressive
-  useEffect(() => {
-    if (isStreaming) {
-      scrollToBottom()
+  // Défilement vers le bas. 'smooth' pour les ajouts non streamés,
+  // 'auto' (instantané) pendant le streaming pour éviter l'accumulation
+  // d'animations smooth sur chaque chunk.
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    const el = messagesContainerRef.current
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior })
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior })
     }
-  }, [streamingText, isStreaming, scrollToBottom])
+  }, [])
+
+  // Scroll doux quand les messages changent hors streaming
+  // (nouveau message, indicateur de saisie, arrivée des suggestions)
+  useEffect(() => {
+    if (!isStreaming) {
+      scrollToBottom('smooth')
+    }
+  }, [messages, isThinking, suggestions, isStreaming, scrollToBottom])
+
+  // Pendant le streaming : scroll instantané ('auto') UNIQUEMENT si
+  // l'utilisateur est déjà proche du bas. S'il lit un ancien message,
+  // on ne le force pas vers le bas.
+  useEffect(() => {
+    if (isStreaming && isNearBottom()) {
+      scrollToBottom('auto')
+    }
+  }, [streamingText, isStreaming, isNearBottom, scrollToBottom])
 
   /* ── Synchroniser la bulle streaming dans messages ── */
   useEffect(() => {
@@ -368,7 +393,7 @@ export default function DiscussionPage() {
      Interface principale
      ══════════════════════════════════════════ */
   return (
-    <div className="flex flex-1 flex-col px-4 py-6 sm:px-8">
+    <div className="flex min-w-0 flex-1 flex-col px-4 py-6 sm:px-8">
       {/* En-tête */}
       <div className="mb-5 flex items-center justify-between border-b border-border/60 pb-4 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
@@ -418,7 +443,7 @@ export default function DiscussionPage() {
       </div>
 
       {/* Zone de messages */}
-      <div className="flex-1 overflow-y-auto pr-1 max-w-3xl mx-auto w-full">
+      <div ref={messagesContainerRef} className="min-w-0 flex-1 overflow-y-auto pr-1 max-w-3xl mx-auto w-full">
         {messages.length === 0 && !isThinking && !isStreaming ? (
           <EmptyChatState onSelect={handleSuggestionSelect} />
         ) : (
@@ -523,8 +548,9 @@ export default function DiscussionPage() {
               } catch (err) {
                 console.error(err)
               } finally {
-                if (selectedAid.url_officielle) {
-                  window.open(selectedAid.url_officielle, '_blank', 'noopener,noreferrer')
+                const externalUrl = selectedAid.url_officielle ?? selectedAid.lien_officiel
+                if (externalUrl) {
+                  window.open(externalUrl, '_blank', 'noopener,noreferrer')
                 }
                 setSelectedAid(null)
               }

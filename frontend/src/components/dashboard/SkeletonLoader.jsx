@@ -1,30 +1,4 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { Bot } from 'lucide-react'
-
-/**
- * Squelette d'indicateur "IA en train d'écrire" avec 3 points animés.
- */
-export function ChatTypingIndicator() {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-brand-light text-brand">
-        <Bot className="size-4" />
-      </div>
-      <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-none border border-border/40 bg-muted/40 px-5 py-4">
-        <span className="text-xs text-muted-foreground mr-1">AidFinder IA en train d'écrire</span>
-        <span className="inline-flex gap-1">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="size-1.5 rounded-full bg-brand/60 animate-bounce"
-              style={{ animationDelay: `${i * 0.18}s`, animationDuration: '0.9s' }}
-            />
-          ))}
-        </span>
-      </div>
-    </div>
-  )
-}
 
 /**
  * Squelette d'un message de conversation (chargement initial).

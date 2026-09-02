@@ -84,6 +84,9 @@ class RecommendationEngine:
                 "categorie": aide.categorie.nom if aide.categorie else aide.type_aide,
                 "source": aide.source.nom if aide.source else None,
                 "source_url": aide.source.url if aide.source else None,
+                # Clé canonique attendue par le frontend + alias rétro-compatible
+                # (response_generator consomme encore "lien_officiel").
+                "url_officielle": aide.url_officielle,
                 "lien_officiel": aide.url_officielle,
                 "region_cible": aide.region_cible,
                 "niveau_etude_requis": aide.niveau_etude_requis,
