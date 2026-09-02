@@ -23,7 +23,11 @@ import json
 import html as html_module
 import time
 import os
+import logging
 from time import perf_counter
+
+
+logger = logging.getLogger("aidfinder.anapec_emploi")
 
 
 # ── Constantes ─────────────────────────────────────────────────
@@ -585,6 +589,20 @@ def scrape_emploi(max_pages: int | None = None):
                     records.append(record)
                 else:
                     metrics["errors"] += 1
+                    # Une offre sans identifiant stable OU sans titre est
+                    # illisible/insérable (titre NOT NULL). On journalise la
+                    # cause pour que l'écart « offres trouvées / enregistrements »
+                    # soit toujours explicable.
+                    missing_id = not str(offer.get("id") or offer.get("ref_offre") or "").strip()
+                    missing_title = not (offer.get("intitule_poste") or "").strip()
+                    log_scraping_error(
+                        f"anapec_emploi_offer_{i}",
+                        f"offre ignorée: id_absent={missing_id} titre_absent={missing_title}",
+                    )
+                    logger.warning(
+                        "[ANAPEC-EMPLOI] Offre %d ignorée (id_absent=%s, titre_absent=%s)",
+                        i, missing_id, missing_title,
+                    )
             except Exception as exc:
                 metrics["errors"] += 1
                 log_scraping_error(f"anapec_emploi_offer_{i}", str(exc))

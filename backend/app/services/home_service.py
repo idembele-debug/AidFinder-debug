@@ -31,9 +31,10 @@ def _serialize_aide(aide: Aides) -> dict:
 
 
 def get_latest_aids(db: Session, limit: int = 6) -> list[dict]:
-    """Retourne les aides les plus récentes enregistrées en base."""
+    """Retourne les aides actives les plus récentes enregistrées en base."""
     aides = (
         db.query(Aides)
+        .filter(Aides.est_active.is_(True))
         .order_by(desc(Aides.date_creation), desc(Aides.aide_id))
         .limit(limit)
         .all()
@@ -42,8 +43,18 @@ def get_latest_aids(db: Session, limit: int = 6) -> list[dict]:
 
 
 def get_home_stats(db: Session) -> dict:
-    """Calcule les chiffres publics de la page d'accueil depuis PostgreSQL."""
-    total_aides = db.query(func.count(Aides.aide_id)).scalar() or 0
+    """Calcule les chiffres publics de la page d'accueil depuis PostgreSQL.
+
+    `total_aides` ne compte QUE les offres/aides actives : le compteur doit
+    refléter les données réellement visibles et exploitables, pas l'historique
+    des enregistrements scrapés (y compris les offres désactivées).
+    """
+    total_aides = (
+        db.query(func.count(Aides.aide_id))
+        .filter(Aides.est_active.is_(True))
+        .scalar()
+        or 0
+    )
     total_categories = db.query(func.count(CategorieAide.categorie_id)).scalar() or 0
     total_sources = db.query(func.count(SourceAide.source_id)).scalar() or 0
     total_utilisateurs = db.query(func.count(Utilisateur.user_id)).scalar() or 0
@@ -105,6 +116,7 @@ def search_home_aids(db: Session, query: str, limit: int = 20) -> list[dict]:
 
     aides = (
         db.query(Aides)
+        .filter(Aides.est_active.is_(True))
         .filter(or_(Aides.titre.ilike(pattern), Aides.description.ilike(pattern)))
         .order_by(desc(relevance), desc(Aides.date_creation), desc(Aides.aide_id))
         .limit(limit)

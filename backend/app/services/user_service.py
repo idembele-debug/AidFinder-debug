@@ -29,6 +29,15 @@ def update_user_theme(db: Session, current_user: Utilisateur, data: ThemeUpdate)
 
 def update_user_profile(db: Session, current_user: Utilisateur, data: UserProfileUpdate):
     update_data = data.model_dump(exclude_unset=True)
+
+    # Refuser explicitement un PATCH sans aucune donnée modifiable :
+    # retourner un 400 plutôt qu'un 200 silencieux avec l'ancien profil.
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aucune donnée valide à mettre à jour. Envoyez au moins un champ à modifier.",
+        )
+
     try:
         for key, value in update_data.items():
             setattr(current_user, key, value)

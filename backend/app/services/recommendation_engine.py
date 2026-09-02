@@ -57,6 +57,7 @@ class RecommendationEngine:
         db: Session,
         profile: dict[str, Any],
         limit: int = 10,
+        keywords: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         aides = (
             db.query(Aides)
@@ -65,13 +66,19 @@ class RecommendationEngine:
             .order_by(desc(Aides.date_creation), desc(Aides.aide_id))
             .all()
         )
+        keyword_hits = (
+            self._matching_aide_ids(aides, keywords) if keywords else set()
+        )
         scored = [
-            (aide, score, raisons)
+            (aide, score, raisons, aide.aide_id in keyword_hits)
             for aide in aides
             for score, raisons in [self.calculate_score(profile, aide)]
         ]
-        scored.sort(key=lambda x: (x[1], x[0].aide_id), reverse=True)
-        return self._serialize_aids(scored[:limit])
+        if keywords:
+            scored.sort(key=lambda x: (x[3], x[1], x[0].aide_id), reverse=True)
+        else:
+            scored.sort(key=lambda x: (x[1], x[0].aide_id), reverse=True)
+        return self._serialize_aids([s[:3] for s in scored[:limit]])
 
     def _serialize_aids(
         self, scored: list[tuple[Aides, int, list[str]]]
@@ -149,6 +156,35 @@ class RecommendationEngine:
                 return 15, "Handicap compatible"
             return 0, "Handicap requis"
         return 15, "Handicap non requis"
+
+    def _matching_aide_ids(
+        self, aides: list[Aides], keywords: list[str] | None
+    ) -> set[int]:
+        """Retourne les identifiants des offres dont le contenu contient un mot-clé.
+
+        Le mot-clé est recherché dans le titre, la description, l'entreprise,
+        le lieu de travail, le type et le niveau d'étude requis — en insensible
+        à la casse. Les offres correspondantes sont remontées en tête de classement.
+        """
+        if not keywords:
+            return set()
+        matches: set[int] = set()
+        for aide in aides:
+            haystack = " ".join(
+                str(value)
+                for value in (
+                    aide.titre,
+                    aide.description,
+                    aide.entreprise_nom,
+                    aide.lieu_travail,
+                    aide.type_aide,
+                    aide.niveau_etude_requis,
+                )
+                if value
+            ).casefold()
+            if any(keyword.casefold() in haystack for keyword in keywords):
+                matches.add(aide.aide_id)
+        return matches
 
 
 recommendation_engine = RecommendationEngine()

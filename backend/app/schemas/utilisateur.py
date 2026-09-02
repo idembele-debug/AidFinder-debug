@@ -31,6 +31,10 @@ class ThemeUpdate(BaseModel):
     theme: Literal["light", "dark"]
 
 class UserProfileUpdate(BaseModel):
+    # `extra="forbid"` : tout champ inconnu est rejeté explicitement (HTTP 422)
+    # au lieu d'être ignoré silencieusement.
+    model_config = ConfigDict(extra="forbid")
+
     nom: str | None = None
     date_naissance: date | None = None
     ville: str | None = None

@@ -219,6 +219,54 @@ class ProfileCollector:
         re.I,
     )
 
+    # Mots exclus de l'extraction de mots-clés de recherche : filler français,
+    # verbes d'intention, mots vagues et noms de lieux déjà gérés par le profil.
+    SEARCH_KEYWORD_STOPWORDS = {
+        "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
+        "cherche", "cherches", "cherchent", "chercher", "recherche",
+        "recherches", "rechercher", "recherche", "veux", "voudrais",
+        "souhaite", "souhaiterais", "aimerais", "veut", "peut", "peux",
+        "pouvez", "pourriez", "pouvoir", "être", "etre", "est", "suis",
+        "un", "une", "du", "de", "des", "le", "la", "les", "l", "d", "a",
+        "à", "et", "ou", "pour", "dans", "sur", "avec", "sans", "vers",
+        "près", "mon", "ma", "mes", "ton", "ta", "tes", "son", "sa", "ses",
+        "notre", "votre", "leur", "leurs", "moi", "toi", "se", "ce",
+        "emploi", "emplois", "travail", "travaille", "travailler", "job",
+        "jobs", "offre", "offres", "poste", "postes", "métier", "metier",
+        "carrière", "carriere", "recrutement", "stage", "stages",
+        "alternance", "contrat", "temporaire", "cdd", "cdi", "intérim",
+        "situation", "actuel", "actuelle", "actuellement", "bien", "très",
+        "tres", "adapté", "adaptee", "adapte", "adaptés", "adaptees",
+        "adaptes", "niveau", "niveaux", "étude", "etude", "études", "etudes",
+        "scolaire", "faire", "trouver", "trouve", "trouveras", "trouver",
+        "idéal", "ideal", "conseiller", "recommander", "recommande",
+        "aider", "aide", "aides", "information", "informations", "info",
+        "plus", "moins", "oui", "non", "svp", "merci", "bonjour", "salut",
+        "bonsoir", "repondre", "répondre", "dire", "demander", "seconder",
+    }
+
+    def extract_search_keywords(self, message: str) -> list[str]:
+        """Extrait des mots-clés de recherche depuis le message utilisateur.
+
+        Exclut les mots de liaison français, les mots d'intention
+        (emploi, offre, travail…) et les noms de lieux déjà portés par le
+        profil. Ex. « Je cherche un emploi de développeur » → ['développeur'].
+        """
+        tokens = re.findall(r"[a-zA-ZÀ-ÿ]{3,}", message)
+        known_places = {key.casefold() for key in self.VILLE_TO_REGION} | {
+            region.casefold() for region in self.VILLE_TO_REGION.values()
+        }
+        keywords: list[str] = []
+        for token in tokens:
+            norm = token.casefold()
+            if norm in self.SEARCH_KEYWORD_STOPWORDS:
+                continue
+            if norm in known_places:
+                continue
+            if norm not in keywords:
+                keywords.append(norm)
+        return keywords[:6]
+
     def extract(self, message: str) -> dict[str, Any]:
         extracted: dict[str, Any] = {}
         for field, pattern in self.EXTRACTION_PATTERNS.items():

@@ -237,8 +237,10 @@ class ChatService:
 
         if should_recommend:
             logger.info("[HANDLE] ÉTAPE 1 — Calcul des recommendations...")
+            keywords = self.brain.profile_collector.extract_search_keywords(clean_message)
+            logger.info("[HANDLE] Mots-clés de recherche extraits: %s", keywords)
             recommendations = recommendation_engine.get_recommendations(
-                db, decision.merged_profile, limit=5
+                db, decision.merged_profile, limit=5, keywords=keywords
             )
             logger.info("[HANDLE] ÉTAPE 1 — %d recommendation(s) trouvée(s)",
                          len(recommendations) if recommendations else 0)
@@ -404,8 +406,10 @@ class ChatService:
 
             if should_recommend:
                 logger.info("[STREAM] ÉTAPE 1 — Calcul des recommendations...")
+                keywords = self.brain.profile_collector.extract_search_keywords(clean_message)
+                logger.info("[STREAM] Mots-clés de recherche extraits: %s", keywords)
                 recommendations = recommendation_engine.get_recommendations(
-                    db, decision.merged_profile, limit=5
+                    db, decision.merged_profile, limit=5, keywords=keywords
                 )
                 logger.info("[STREAM] ÉTAPE 1 — %d recommendation(s) trouvée(s)",
                              len(recommendations) if recommendations else 0)

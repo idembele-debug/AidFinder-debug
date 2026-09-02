@@ -97,7 +97,13 @@ def _serialize_aide(aide: Aides) -> dict:
 def get_dashboard_stats(db: Session) -> dict:
     return {
         "total_utilisateurs": db.query(func.count(Utilisateur.user_id)).scalar() or 0,
-        "total_aides": db.query(func.count(Aides.aide_id)).scalar() or 0,
+        # Cohérence avec la page d'accueil : seules les aides actives comptent.
+        "total_aides": (
+            db.query(func.count(Aides.aide_id))
+            .filter(Aides.est_active.is_(True))
+            .scalar()
+            or 0
+        ),
         "total_categories": db.query(func.count(CategorieAide.categorie_id)).scalar() or 0,
         "total_sources": db.query(func.count(SourceAide.source_id)).scalar() or 0,
         "total_conversations": db.query(func.count(Discussion.discussion_id)).scalar() or 0,
@@ -481,6 +487,7 @@ def get_statistics(db: Session) -> dict:
         for label, total in (
             db.query(CategorieAide.nom, func.count(Aides.aide_id))
             .outerjoin(Aides, Aides.categorie_id == CategorieAide.categorie_id)
+            .filter(Aides.est_active.is_(True))
             .group_by(CategorieAide.nom)
             .order_by(CategorieAide.nom)
             .all()
@@ -490,6 +497,7 @@ def get_statistics(db: Session) -> dict:
         {"label": label or "Non renseignée", "total": total or 0}
         for label, total in (
             db.query(Aides.region_cible, func.count(Aides.aide_id))
+            .filter(Aides.est_active.is_(True))
             .group_by(Aides.region_cible)
             .order_by(desc(func.count(Aides.aide_id)))
             .all()

@@ -38,22 +38,30 @@ class PromptBuilder:
     )
 
     SYSTEM_PROMPT = (
-        "Tu es AidFinder, un assistant conversationnel spécialisé "
-        "dans l'orientation vers les aides financières et sociales au Maroc.\n\n"
+        "Tu es AidFinder, un assistant conversationnel spécialisé dans l'orientation "
+        "vers les aides financières, les aides sociales et les offres d'emploi AU MAROC.\n\n"
+        "CONTEXTE GÉOGRAPHIQUE OBLIGATOIRE :\n"
+        "- AidFinder est une plateforme MAROCAINE. Tous les organismes, aides et offres "
+        "cités sont marocains (ANAPEC, etc.).\n"
+        "- N'utilise JAMAIS d'organismes, de sites ou de plateformes français, belges, "
+        "canadiens ou internationaux (France Travail, Pôle emploi, Apec, Indeed, "
+        "LinkedIn Jobs, HelloWork, CROUS…) comme réponse, suggestion ou référence.\n"
+        "- Pour les offres d'emploi, la seule source à mentionner est la base AidFinder "
+        "alimentée par ANAPEC (https://anapec.ma).\n\n"
         "RÈGLES STRICTES :\n"
         "1. Tu réponds TOUJOURS de manière naturelle et chaleureuse, comme un vrai conseiller.\n"
-        "2. Tu n'inventes JAMAIS une aide qui n'est pas dans la liste fournie.\n"
-        "3. Si l'utilisateur demande des informations que tu n'as pas, dis-le honnêtement.\n"
-        "4. Tu poses UNE SEULE question à la fois.\n"
-        "5. Utilise les émojis avec parcimonie (👋 😊 👍).\n"
-        "6. Ne liste toutes les aides que si l'utilisateur le demande explicitement.\n"
+        "2. Tu n'inventes JAMAIS une aide ou une offre qui n'est pas dans la liste fournie.\n"
+        "3. Quand des offres/aides recommandées sont fournies en JSON, présente-les de façon "
+        "courte et invite à consulter le lien officiel. NE les remplace PAS par une liste "
+        "générique de sites externes.\n"
+        "4. Si l'utilisateur demande des informations que tu n'as pas, dis-le honnêtement.\n"
+        "5. Tu poses UNE SEULE question à la fois, UNIQUEMENT sur le champ manquant indiqué.\n"
+        "6. Utilise les émojis avec parcimonie (👋 😊 👍).\n"
         "7. Si l'utilisateur donne une information, remercie-le et passe à l'étape suivante.\n"
         "8. Si l'utilisateur te salue (bonjour, salut, etc.), réponds de manière naturelle "
         "et demande-lui ce qu'il cherche.\n"
-        "9. Si l'utilisateur te dit merci, réponds avec bienveillance.\n"
-        "10. Si l'utilisateur dit au revoir, réponds chaleureusement et termine la conversation.\n"
-        "11. Si l'utilisateur demande comment tu vas, réponds de manière naturelle.\n"
-        "12. Tu es AidFinder, pas un assistant générique.\n\n"
+        "9. Ne redemande jamais une information déjà présente dans le profil utilisateur.\n"
+        "10. Tu es AidFinder, un assistant marocain, pas un assistant générique.\n\n"
     )
 
     def build_system_prompt(
@@ -73,6 +81,14 @@ class PromptBuilder:
         # Conversation state (informational only)
         parts.append(f"État conversationnel : {decision.new_state.value}\n")
         parts.append(f"Intention détectée : {decision.intent.value}\n")
+
+        # Champ manquant unique à demander (collecte ciblée — jamais de questionnaire complet)
+        if decision.should_ask_question and decision.field_to_ask:
+            field_label = decision.field_to_ask.replace("_", " ")
+            parts.append(
+                f"CHAMP MANQUANT UNIQUE : « {field_label} ». Pose UNIQUEMENT la question "
+                "correspondant à ce champ (une seule question), puis n'ajoute rien d'autre.\n"
+            )
 
         # History
         if history:
@@ -108,12 +124,14 @@ class PromptBuilder:
             )
             parts.append(self.RECOMMENDATIONS_TEMPLATE.format(aids=aids_json))
             parts.append(
-                "\n\nINSTRUCTION : Ces recommandations ont été calculées par le backend "
-                "à partir du profil utilisateur. Présente-les à l'utilisateur de manière "
-                "naturelle et personnalisée. Utilise UNIQUEMENT les aides listées ci-dessus ; "
-                "n'en invente aucune. Organise la réponse ainsi :\n"
+                "\n\nINSTRUCTION : Ces recommandations sont des offres/aides marocaines "
+                "réelles calculées par le backend à partir du profil utilisateur. "
+                "Présente-les à l'utilisateur de manière naturelle et personnalisée. "
+                "Utilise UNIQUEMENT les offres listées ci-dessus ; n'en invente aucune. "
+                "Ne mentionne AUCUN site externe français ou étranger. Organise la réponse "
+                "ainsi :\n"
                 "1. Réponds d'abord naturellement au message de l'utilisateur.\n"
-                "2. Ensuite, présente clairement les aides recommandées avec leurs points forts.\n"
+                "2. Ensuite, présente clairement les offres recommandées, avec leur lien officiel.\n"
                 "3. Termine par une question ouverte ou une proposition d'aide supplémentaire."
             )
             parts.append(
@@ -121,16 +139,27 @@ class PromptBuilder:
                 "et concise."
             )
         else:
+            extras: list[str] = []
+            if decision.intent == IntentCategory.SEARCH_JOB:
+                extras.append(
+                    "Note : la demande concerne les offres d'emploi marocaines. "
+                    "La seule source d'offres est la base AidFinder (ANAPEC). "
+                    "Ne cite JAMAIS de plateformes françaises ou étrangères. "
+                    "Si aucune offre n'est disponible, explique-le brièvement "
+                    "et propose de reformuler la recherche."
+                )
             parts.append(
                 "Réponds maintenant au message de l'utilisateur de manière naturelle, "
                 "chaleureuse et concise.\n\n"
                 "Tu es libre de répondre comme un vrai conseiller. "
-                "Ne pose des questions sur le profil que si c'est naturel dans la conversation. "
+                "Ne pose des questions sur le profil que si le champ manquant est indiqué. "
                 "Si l'utilisateur te salue, salue-le en retour. "
                 "Si l'utilisateur te demande qui tu es, présente-toi. "
                 "Si l'utilisateur commence à parler de sa situation, "
                 "écoute et pose des questions pertinentes une par une."
             )
+            if extras:
+                parts.append("\n".join(extras))
 
         return "\n".join(parts)
 
@@ -199,6 +228,16 @@ class ConversationFallback:
             collector = ProfileCollector()
             return collector.get_question(decision.field_to_ask)
 
+        # ── Recherche d'emploi sans offre disponible ────────────────
+        if intent == IntentCategory.SEARCH_JOB:
+            logger.info("[FALLBACK] Recherche d'emploi sans offre en base")
+            return (
+                "Je suis désolé, je n'ai pas trouvé d'offre d'emploi marocaine "
+                "correspondant à votre recherche pour le moment. 📋\n\n"
+                "Vous pouvez consulter régulièrement le portail ANAPEC "
+                "(https://anapec.ma) ou tenter de reformuler votre recherche."
+            )
+
         # ── Clarification ───────────────────────────────────────────
         if decision.clarification_needed:
             logger.info("[FALLBACK] Clarification nécessaire")
@@ -240,8 +279,8 @@ class ConversationFallback:
         return (
             "Bonjour 👋\n\n"
             "Je suis AidFinder. Je suis là pour vous accompagner "
-            "dans la recherche des aides financières auxquelles "
-            "vous pourriez être éligible.\n\n"
+            "dans la recherche des aides financières, des aides sociales "
+            "et des offres d'emploi au Maroc. 🇲🇦\n\n"
             "Comment puis-je vous aider aujourd'hui ?"
         )
 
@@ -284,18 +323,24 @@ class ConversationFallback:
         return msg
 
     def _recommendation_response(self, recommendations: list[dict]) -> str:
-        best = recommendations[0]
-        raisons = ", ".join(best.get("raisons", []))
-        lien = best.get("lien_officiel") or ""
+        shown = recommendations[:3]
+        lines = []
+        for i, reco in enumerate(shown, 1):
+            link = reco.get("lien_officiel") or reco.get("url_officielle") or ""
+            titre = reco.get("titre", "Offre disponible")
+            raisons = ", ".join(reco.get("raisons", [])[:2])
+            score = reco.get("score_matching", 0)
+            ligne = f"{i}. **{titre}** — compatibilité {score}/100"
+            if raisons:
+                ligne += f" ({raisons})"
+            if link:
+                ligne += f"\n   🔗 {link}"
+            lines.append(ligne)
         return (
-            f"Parfait ! D'après votre profil, voici l'aide la plus adaptée "
-            f"pour vous :\n\n"
-            f"🏆 **{best['titre']}**\n"
-            f"Score de compatibilité : {best['score_matching']}/100\n"
-            f"Raisons : {raisons}\n"
-            f"🔗 Lien officiel : {lien}\n\n"
-            f"Souhaitez-vous plus de détails sur cette aide, "
-            f"ou voir toutes les aides disponibles ?"
+            "Voici des offres d'emploi marocaines disponibles qui correspondent "
+            f"à votre profil :\n\n{chr(10).join(lines)}\n\n"
+            "Cliquez sur « Consulter » pour accéder à l'offre officielle. "
+            "Souhaitez-vous plus de détails ou affiner la recherche ?"
         )
 
 
