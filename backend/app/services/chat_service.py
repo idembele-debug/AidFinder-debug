@@ -184,6 +184,29 @@ def _compute_dynamic_suggestions(
     return unique[:6]
 
 
+def _enrich_recommendations_for_api(
+    recommendations: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """Prépare les recommandations pour la réponse API (contrat `DashboardAidResponse`).
+
+    Le schéma `DashboardAidResponse` (utilisé comme `response_model` sur
+    `POST /dashboard/chat`) exige à la fois les clés `id` ET `aide_id`.
+    Le moteur de recommandations (`recommendation_engine._serialize_aids`) ne
+    renvoie que `aide_id` — et son dict est aussi transmis tel quel à Dify
+    (`inputs["recommendations"]`), donc il ne doit PAS être modifié ici.
+
+    Cette fonction ajoute donc `id` (alias de `aide_id`, comme le fait
+    `dashboard_service._serialize_aid`) UNIQUEMENT sur la couche de réponse API,
+    pour le POST `/dashboard/chat` et l'événement SSE `done` du streaming.
+    """
+    if not recommendations:
+        return []
+    return [
+        reco if "id" in reco else {**reco, "id": reco["aide_id"]}
+        for reco in recommendations
+    ]
+
+
 class ChatService:
     def __init__(self) -> None:
         self.memory = ConversationMemory()
@@ -300,7 +323,9 @@ class ChatService:
         missing_blocking = (
             self.brain.profile_collector.missing_blocking_fields(decision.merged_profile)
         )
-        if decision.field_to_ask:
+        # La question exposée correspond EXACTEMENT à celle posée par le chatbot.
+        # Une salutation ou une demande vague ne déclenche jamais de question de profil.
+        if decision.should_ask_question and decision.field_to_ask:
             question_actuelle = self.brain.profile_collector.get_question(decision.field_to_ask)
         else:
             question_actuelle = None
@@ -326,7 +351,7 @@ class ChatService:
                 "contenu": bot_msg.contenu,
                 "date_creation": as_utc(bot_msg.date_creation),
             },
-            "aides_recommandees": recommendations or [],
+            "aides_recommandees": _enrich_recommendations_for_api(recommendations),
             "conversation_state": meta.state.value,
             "champs_manquants": missing_blocking,
             "question_actuelle": question_actuelle,
@@ -457,7 +482,10 @@ class ChatService:
             missing_blocking = (
                 self.brain.profile_collector.missing_blocking_fields(decision.merged_profile)
             )
-            if decision.field_to_ask:
+            # La question exposée au frontend correspond EXACTEMENT à celle posée
+            # par le chatbot. Une salutation ou une demande vague ne déclenche
+            # jamais de question de profil.
+            if decision.should_ask_question and decision.field_to_ask:
                 question_actuelle = self.brain.profile_collector.get_question(decision.field_to_ask)
             else:
                 question_actuelle = None
@@ -483,7 +511,7 @@ class ChatService:
                         "contenu": bot_msg.contenu,
                         "date_creation": as_utc(bot_msg.date_creation),
                     },
-                    "aides_recommandees": recommendations or [],
+                    "aides_recommandees": _enrich_recommendations_for_api(recommendations),
                     "conversation_state": meta.state.value,
                     "champs_manquants": missing_blocking,
                     "question_actuelle": question_actuelle,

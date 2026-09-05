@@ -49,6 +49,9 @@ class DifyClient:
         if configuration_error:
             return configuration_error
 
+        # ── Provenance (mission diagnostic provider) ─────────────────────
+        logger.info("[CHAT] PROVIDER=DIFY")
+        logger.info("[CHAT] DIFY_REQUEST_SENT")
         logger.info("[Dify] Appel bloquant envoyé")
         try:
             response = requests.post(
@@ -65,12 +68,15 @@ class DifyClient:
             )
         except requests.Timeout:
             logger.warning("[Dify] Timeout après %s secondes", self.timeout)
+            logger.warning("[CHAT] DIFY_UNAVAILABLE: timeout après %s secondes", self.timeout)
             return self._error("Dify request timed out.")
         except requests.RequestException as exc:
             logger.error("[Dify] Erreur réseau: %s", exc)
+            logger.error("[CHAT] DIFY_UNAVAILABLE: erreur réseau (%s)", exc)
             return self._error("Unable to reach Dify.")
         except Exception:
             logger.exception("[Dify] Erreur inattendue pendant l'appel")
+            logger.error("[CHAT] DIFY_UNAVAILABLE: erreur inattendue")
             return self._error("Unexpected Dify client error.")
 
         return self._parse_blocking_response(response)
@@ -94,6 +100,9 @@ class DifyClient:
             yield configuration_error
             return
 
+        # ── Provenance (mission diagnostic provider) ─────────────────────
+        logger.info("[CHAT] PROVIDER=DIFY")
+        logger.info("[CHAT] DIFY_REQUEST_SENT")
         logger.info("[Dify] Appel streaming envoyé")
         try:
             with requests.post(
@@ -121,12 +130,15 @@ class DifyClient:
                 logger.info("[Dify] Streaming terminé avec succès")
         except requests.Timeout:
             logger.warning("[Dify] Timeout streaming après %s secondes", self.timeout)
+            logger.warning("[CHAT] DIFY_UNAVAILABLE: timeout streaming après %s secondes", self.timeout)
             yield self._error("Dify request timed out.")
         except requests.RequestException as exc:
             logger.error("[Dify] Erreur réseau streaming: %s", exc)
+            logger.error("[CHAT] DIFY_UNAVAILABLE: erreur réseau streaming (%s)", exc)
             yield self._error("Unable to reach Dify.")
         except Exception:
             logger.exception("[Dify] Erreur inattendue pendant le streaming")
+            logger.error("[CHAT] DIFY_UNAVAILABLE: erreur inattendue streaming")
             yield self._error("Unexpected Dify client error.")
 
     @property
@@ -143,12 +155,15 @@ class DifyClient:
     def _configuration_error(self, user: str | None) -> DifyResult | None:
         if not self.base_url:
             logger.error("[Dify] Configuration absente: DIFY_API_URL")
+            logger.error("[CHAT] DIFY_UNAVAILABLE: DIFY_API_URL non configuré")
             return self._error("DIFY_API_URL is not configured.")
         if not self.api_key:
             logger.error("[Dify] Configuration absente: DIFY_API_KEY")
+            logger.error("[CHAT] DIFY_UNAVAILABLE: DIFY_API_KEY non configuré")
             return self._error("DIFY_API_KEY is not configured.")
         if not (user or self.user):
             logger.error("[Dify] Configuration absente: DIFY_USER")
+            logger.error("[CHAT] DIFY_UNAVAILABLE: DIFY_USER non configuré")
             return self._error("DIFY_USER is not configured.")
         return None
 
@@ -180,9 +195,11 @@ class DifyClient:
 
         if not isinstance(payload, dict):
             logger.error("[Dify] Réponse JSON inattendue")
+            logger.warning("[CHAT] DIFY_UNAVAILABLE: réponse Dify invalide")
             return self._error("Unexpected response format from Dify.", response.status_code)
         if payload.get("code") or payload.get("error"):
             logger.error("[Dify] Erreur retournée par Dify")
+            logger.warning("[CHAT] DIFY_UNAVAILABLE: erreur retournée par Dify")
             return self._error(
                 str(payload.get("message") or payload.get("error") or "Dify error."),
                 response.status_code,
@@ -190,6 +207,7 @@ class DifyClient:
             )
 
         logger.info("[Dify] Appel bloquant réussi")
+        logger.info("[CHAT] DIFY_RESPONSE_RECEIVED (mode bloquant)")
         return self._success(payload)
 
     def _parse_stream_event(self, data: str) -> DifyResult:
@@ -204,10 +222,13 @@ class DifyClient:
             return self._error("Unexpected stream event from Dify.")
         if payload.get("event") == "error" or payload.get("code") or payload.get("error"):
             logger.error("[Dify] Erreur retournée pendant le streaming")
+            logger.warning("[CHAT] DIFY_UNAVAILABLE: erreur Dify pendant le streaming")
             return self._error(
                 str(payload.get("message") or payload.get("error") or "Dify error."),
                 raw=payload,
             )
+        if payload.get("answer"):
+            logger.info("[CHAT] DIFY_RESPONSE_RECEIVED (évènement streaming)")
         return self._success(payload)
 
     def _http_error(self, response: requests.Response) -> DifyResult:
@@ -220,6 +241,7 @@ class DifyClient:
             pass
 
         logger.error("[Dify] Erreur HTTP %s", response.status_code)
+        logger.error("[CHAT] DIFY_UNAVAILABLE: erreur HTTP %s", response.status_code)
         return self._error(
             str((payload or {}).get("message") or "Dify returned an HTTP error."),
             response.status_code,

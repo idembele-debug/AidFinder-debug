@@ -38,31 +38,84 @@ class PromptBuilder:
     )
 
     SYSTEM_PROMPT = (
-        "Tu es AidFinder, un assistant conversationnel spécialisé dans l'orientation "
-        "vers les aides financières, les aides sociales et les offres d'emploi AU MAROC.\n\n"
-        "CONTEXTE GÉOGRAPHIQUE OBLIGATOIRE :\n"
-        "- AidFinder est une plateforme MAROCAINE. Tous les organismes, aides et offres "
-        "cités sont marocains (ANAPEC, etc.).\n"
-        "- N'utilise JAMAIS d'organismes, de sites ou de plateformes français, belges, "
-        "canadiens ou internationaux (France Travail, Pôle emploi, Apec, Indeed, "
-        "LinkedIn Jobs, HelloWork, CROUS…) comme réponse, suggestion ou référence.\n"
-        "- Pour les offres d'emploi, la seule source à mentionner est la base AidFinder "
-        "alimentée par ANAPEC (https://anapec.ma).\n\n"
-        "RÈGLES STRICTES :\n"
-        "1. Tu réponds TOUJOURS de manière naturelle et chaleureuse, comme un vrai conseiller.\n"
-        "2. Tu n'inventes JAMAIS une aide ou une offre qui n'est pas dans la liste fournie.\n"
-        "3. Quand des offres/aides recommandées sont fournies en JSON, présente-les de façon "
-        "courte et invite à consulter le lien officiel. NE les remplace PAS par une liste "
-        "générique de sites externes.\n"
-        "4. Si l'utilisateur demande des informations que tu n'as pas, dis-le honnêtement.\n"
-        "5. Tu poses UNE SEULE question à la fois, UNIQUEMENT sur le champ manquant indiqué.\n"
-        "6. Utilise les émojis avec parcimonie (👋 😊 👍).\n"
-        "7. Si l'utilisateur donne une information, remercie-le et passe à l'étape suivante.\n"
-        "8. Si l'utilisateur te salue (bonjour, salut, etc.), réponds de manière naturelle "
-        "et demande-lui ce qu'il cherche.\n"
-        "9. Ne redemande jamais une information déjà présente dans le profil utilisateur.\n"
-        "10. Tu es AidFinder, un assistant marocain, pas un assistant générique.\n\n"
+        "Tu es AidFinder, un assistant conversationnel marocain, chaleureux et direct, "
+        "qui aide les utilisateurs à trouver des offres d'emploi, des aides sociales "
+        "et des opportunités AU MAROC.\n\n"
+        "RÈGLES D'OR — APPLIQUE-LES À CHAQUE RÉPONSE :\n"
+        "1. CONVERSATION, PAS FORMULAIRE. Ne demande JAMAIS plus d'UNE information par "
+        "message, et uniquement quand elle est réellement nécessaire pour avancer. "
+        "Ne transforme jamais un échange en questionnaire.\n"
+        "2. COURT ET NATUREL. Réponds en quelques phrases, au tutoiement (« tu »). "
+        "Ne produis JAMAIS de guides complets ni de conseils génériques non demandés "
+        "(CV, LinkedIn, GitHub, portfolio, lettre de motivation, démarches, sites de "
+        "candidature…). Donne ce genre de conseils uniquement si l'utilisateur les "
+        "demande explicitement.\n"
+        "3. PAS DE LISTES À PUCES INUTILES. Utilise des listes uniquement pour présenter "
+        "plusieurs offres ou plusieurs options distinctes. Dans un échange normal, "
+        "rédige des phrases simples.\n"
+        "4. UTILISE CE QUE TU SAIS DÉJÀ. Le profil utilisateur et l'historique sont "
+        "fournis dans le contexte. Ne redemande JAMAIS une information déjà connue "
+        "(ville, région, âge, niveau d'étude, statut…).\n"
+        "5. CONTEXTE MAROCAIN UNIQUEMENT. AidFinder est une plateforme marocaine et le "
+        "contexte actuel concerne principalement les offres d'emploi marocaines. "
+        "La seule source d'offres est la base AidFinder, alimentée par ANAPEC "
+        "(https://anapec.ma). N'invoque JAMAIS d'organismes, plateformes ou aides "
+        "français(es) ou étranger(ère)s : France Travail, Pôle emploi, APEC, Mission "
+        "Locale, CROUS, Indeed, LinkedIn Jobs, HelloWork, aide au logement française, "
+        "titre de séjour, etc.\n"
+        "6. JAMAIS D'INVENTION. N'invente aucune offre ni aide. Utilise uniquement les "
+        "offres fournies dans la section RECOMMANDATIONS du contexte, ou explique "
+        "honnêtement qu'aucune offre correspondante n'a été trouvée.\n"
+        "7. ÉMOJIS AVEC PARCIMONIE (👋 😊 👍 🇲🇦).\n"
+        "8. DONNE ENVIE DE CONTINUER. Termine par une question ouverte courte ou une "
+        "proposition simple, sans jamais enchaîner plusieurs questions.\n\n"
     )
+
+    SOCIAL_INTENTS = {
+        IntentCategory.GREETING,
+        IntentCategory.HOW_ARE_YOU,
+        IntentCategory.THANKS,
+        IntentCategory.GOODBYE,
+        IntentCategory.HELP,
+    }
+    SEARCH_INTENTS = {
+        IntentCategory.SEARCH_JOB,
+        IntentCategory.SEARCH_STUDY,
+        IntentCategory.SEARCH_HOUSING,
+        IntentCategory.SEARCH_HEALTH,
+        IntentCategory.SEARCH_BUSINESS,
+    }
+
+    @staticmethod
+    def _profile_summary(profile: dict) -> str:
+        """Résumé lisible du profil pour que l'IA ne redemande jamais ce qui est connu."""
+        labels = {
+            "ville": "ville",
+            "region": "région",
+            "niveau_etude": "niveau d'étude",
+            "statut_socio_pro": "statut",
+            "age": "âge",
+            "handicap": "situation de handicap",
+        }
+        known = []
+        for field in ("ville", "region", "niveau_etude", "statut_socio_pro", "age", "handicap"):
+            value = profile.get(field)
+            if value is None or value == "":
+                continue
+            if field == "handicap":
+                known.append(
+                    "situation de handicap : oui" if value is True
+                    else "situation de handicap : non"
+                )
+            elif field == "age":
+                known.append(f"âge : {value} ans")
+            else:
+                known.append(f"{labels.get(field, field)} : {value}")
+        if not known:
+            return "Aucune information de profil connue pour le moment."
+        if len(known) == 1:
+            return known[0].capitalize() + "."
+        return ", ".join(known[:-1]).capitalize() + " et " + known[-1] + "."
 
     def build_system_prompt(
         self,
@@ -71,26 +124,41 @@ class PromptBuilder:
         history: list[dict] | None = None,
         recommendations: list[dict] | None = None,
     ) -> str:
-        profile_str = json.dumps(decision.merged_profile, default=str, ensure_ascii=False)
-
         parts = [self.SYSTEM_PROMPT]
 
-        # User profile (for context only — LLM decides what to ask)
-        parts.append(f"Profil utilisateur (connu jusqu'à présent) : {profile_str}\n")
+        # Profil utilisateur — tout ce qui est déjà connu, à ne jamais redemander.
+        parts.append(
+            "PROFIL UTILISATEUR (informations déjà connues, à NE JAMAIS redemander) :\n"
+            f"{self._profile_summary(decision.merged_profile)}\n"
+        )
 
-        # Conversation state (informational only)
-        parts.append(f"État conversationnel : {decision.new_state.value}\n")
-        parts.append(f"Intention détectée : {decision.intent.value}\n")
+        # État & intention du tour courant (purement contextuel).
+        parts.append(f"État conversationnel : {decision.new_state.value}")
+        parts.append(f"Intention détectée : {decision.intent.value}")
 
-        # Champ manquant unique à demander (collecte ciblée — jamais de questionnaire complet)
+        # Collecte ciblée : UN SEUL champ manquant, une seule question, rien d'autre.
         if decision.should_ask_question and decision.field_to_ask:
             field_label = decision.field_to_ask.replace("_", " ")
             parts.append(
                 f"CHAMP MANQUANT UNIQUE : « {field_label} ». Pose UNIQUEMENT la question "
                 "correspondant à ce champ (une seule question), puis n'ajoute rien d'autre.\n"
             )
+        elif decision.field_to_ask:
+            parts.append(
+                f"Note : le champ « {decision.field_to_ask.replace('_', ' ')} » manque, "
+                "mais NE le demande pas à ce tour de conversation.\n"
+            )
 
-        # History
+        # Échanges sociaux : brièveté exigée, aucune collecte de profil.
+        if decision.intent in self.SOCIAL_INTENTS:
+            parts.append(
+                "CONSIGNE SOCIALE : l'utilisateur vient de te saluer ou d'échanger un "
+                "message amical. Réponds-en une ou deux phrases chaleureuses et demande-lui "
+                "ce qu'il cherche aujourd'hui. Ne pose AUCUNE question de profil et ne "
+                "donne AUCUNE information non demandée.\n"
+            )
+
+        # Historique récent pour la continuité (jamais de question déjà répondues).
         if history:
             history_str = "\n".join(
                 f"{'Utilisateur' if m['role'] == 'user' else 'AidFinder'} : "
@@ -99,7 +167,7 @@ class PromptBuilder:
             )
             parts.append(self.HISTORY_TEMPLATE.format(history=history_str))
 
-        # Recommendations (fournies par le backend — jamais inventées par Dify)
+        # Recommandations calculées par le backend : les présenter simplement.
         if recommendations:
             aids_json = json.dumps(
                 [
@@ -124,42 +192,38 @@ class PromptBuilder:
             )
             parts.append(self.RECOMMENDATIONS_TEMPLATE.format(aids=aids_json))
             parts.append(
-                "\n\nINSTRUCTION : Ces recommandations sont des offres/aides marocaines "
-                "réelles calculées par le backend à partir du profil utilisateur. "
-                "Présente-les à l'utilisateur de manière naturelle et personnalisée. "
-                "Utilise UNIQUEMENT les offres listées ci-dessus ; n'en invente aucune. "
-                "Ne mentionne AUCUN site externe français ou étranger. Organise la réponse "
-                "ainsi :\n"
-                "1. Réponds d'abord naturellement au message de l'utilisateur.\n"
-                "2. Ensuite, présente clairement les offres recommandées, avec leur lien officiel.\n"
-                "3. Termine par une question ouverte ou une proposition d'aide supplémentaire."
+                "INSTRUCTION : ces recommandations sont de VRAIES offres/aides marocaines "
+                "calculées par le backend à partir du profil utilisateur. Présente-les de "
+                "manière naturelle et concise : une phrase d'introduction puis une courte "
+                "liste des offres (titre + lien officiel « Consulter »), puis une question "
+                "ouverte finale (une seule). Utilise UNIQUEMENT les offres listées "
+                "ci-dessus. N'ajoute AUCUN conseil de candidature (CV, LinkedIn, GitHub…), "
+                "et AUCUNE plateforme externe.\n"
             )
             parts.append(
-                "Réponds maintenant en présentant ces recommandations, de manière chaleureuse "
-                "et concise."
+                "Réponds maintenant en présentant ces recommandations, chaleureusement "
+                "et en restant bref."
+            )
+        elif decision.intent in self.SEARCH_INTENTS or decision.intent == IntentCategory.ASK_DETAILS:
+            parts.append(
+                "CONSIGNE (recherche en cours) : l'utilisateur cherche des opportunités "
+                "marocaines concrètes. "
+                "Si un champ bloquant manque (indiqué plus haut), pose UNIQUEMENT la "
+                "question correspondante, en une phrase. Sinon, accueille sa demande en "
+                "une phrase, pose AU PLUS UNE question d'affinage réellement utile "
+                "(spécialisation, type de contrat, ville…), ou annonce une recherche "
+                "d'offres. Ne pose JAMAIS plusieurs questions d'un coup et ne lance AUCUN "
+                "guide complet. Ne cite AUCUNE plateforme française ou étrangère. Si des "
+                "offres ont déjà été présentées précédemment, rappelle-le brièvement et "
+                "propose une suite simple.\n"
             )
         else:
-            extras: list[str] = []
-            if decision.intent == IntentCategory.SEARCH_JOB:
-                extras.append(
-                    "Note : la demande concerne les offres d'emploi marocaines. "
-                    "La seule source d'offres est la base AidFinder (ANAPEC). "
-                    "Ne cite JAMAIS de plateformes françaises ou étrangères. "
-                    "Si aucune offre n'est disponible, explique-le brièvement "
-                    "et propose de reformuler la recherche."
-                )
             parts.append(
-                "Réponds maintenant au message de l'utilisateur de manière naturelle, "
-                "chaleureuse et concise.\n\n"
-                "Tu es libre de répondre comme un vrai conseiller. "
-                "Ne pose des questions sur le profil que si le champ manquant est indiqué. "
-                "Si l'utilisateur te salue, salue-le en retour. "
-                "Si l'utilisateur te demande qui tu es, présente-toi. "
-                "Si l'utilisateur commence à parler de sa situation, "
-                "écoute et pose des questions pertinentes une par une."
+                "CONSIGNE DU TOUR : réponds naturellement et brièvement au message. "
+                "Si une information est réellement nécessaire pour avancer, pose UNE "
+                "seule question courte. Sinon, continue la conversation sans collecter "
+                "de données et sans liste.\n"
             )
-            if extras:
-                parts.append("\n".join(extras))
 
         return "\n".join(parts)
 
@@ -221,8 +285,8 @@ class ConversationFallback:
             logger.info("[FALLBACK] Recommendations disponibles — %d aide(s)", len(recommendations))
             return self._recommendation_response(recommendations)
 
-        # ── Collecting info / asking question ───────────────────────
-        if decision.field_to_ask:
+        # ── Collecting info / asking question (une seule question) ──
+        if decision.should_ask_question and decision.field_to_ask:
             logger.info("[FALLBACK] Champ manquant: %s", decision.field_to_ask)
             from app.services.conversation_brain import ProfileCollector
             collector = ProfileCollector()
@@ -232,95 +296,83 @@ class ConversationFallback:
         if intent == IntentCategory.SEARCH_JOB:
             logger.info("[FALLBACK] Recherche d'emploi sans offre en base")
             return (
-                "Je suis désolé, je n'ai pas trouvé d'offre d'emploi marocaine "
-                "correspondant à votre recherche pour le moment. 📋\n\n"
-                "Vous pouvez consulter régulièrement le portail ANAPEC "
-                "(https://anapec.ma) ou tenter de reformuler votre recherche."
+                "Je n'ai pas trouvé d'offre correspondant exactement à ta recherche "
+                "pour le moment 📋. Tu peux reformuler ou préciser (ville, métier) ? "
+                "Le portail ANAPEC (https://anapec.ma) est aussi mis à jour régulièrement."
             )
 
         # ── Clarification ───────────────────────────────────────────
         if decision.clarification_needed:
             logger.info("[FALLBACK] Clarification nécessaire")
             return (
-                "Je n'ai pas bien compris votre demande. 🤔\n\n"
-                "Pouvez-vous reformuler ? Par exemple :\n"
-                "• \"Je cherche un emploi\"\n"
-                "• \"Je veux poursuivre mes études\"\n"
-                "• \"J'ai besoin d'un logement\""
+                "Je n'ai pas bien compris ta demande 🤔 Tu cherches un emploi, "
+                "une formation, un logement ou autre chose ?"
             )
 
         # ── Default ─────────────────────────────────────────────────
         logger.info("[FALLBACK] Réponse par défaut (aucun cas spécifique)")
         return (
-            "Je suis là pour vous aider à trouver des aides "
-            "financières et sociales adaptées à votre situation.\n\n"
-            "Que recherchez-vous comme aide ?"
+            "Je suis AidFinder, ton assistant pour trouver des aides et des "
+            "offres d'emploi au Maroc 🇲🇦 Qu'est-ce que tu cherches ?"
         )
 
     def _greeting_response(self, state: ConversationState, intent: IntentCategory,
                            decision: ConversationDecision) -> str:
         if intent == IntentCategory.HOW_ARE_YOU:
             return (
-                "Je vais très bien, merci ! 😊\n\n"
-                "Je suis AidFinder, votre assistant pour trouver "
-                "des aides financières et sociales au Maroc.\n\n"
-                "Que puis-je faire pour vous aujourd'hui ?"
+                "Je vais très bien, merci 😊 Et toi, tu cherches quelque chose "
+                "aujourd'hui ?"
             )
         if intent == IntentCategory.HELP:
             return (
-                "Je suis AidFinder, votre assistant pour trouver des aides "
-                "financières et sociales au Maroc. 🤖\n\n"
-                "Je peux vous aider à :\n"
-                "• Trouver des aides pour l'emploi, les études, le logement, la santé\n"
-                "• Vérifier votre éligibilité aux différentes aides\n"
-                "• Vous orienter vers les bons organismes\n\n"
-                "Dites-moi ce que vous cherchez !"
+                "Je suis AidFinder, ton assistant marocain pour trouver des offres "
+                "d'emploi, des aides et des opportunités 🇲🇦\n\n"
+                "Dis-moi simplement ce que tu cherches, on commence par là."
             )
         return (
-            "Bonjour 👋\n\n"
-            "Je suis AidFinder. Je suis là pour vous accompagner "
-            "dans la recherche des aides financières, des aides sociales "
-            "et des offres d'emploi au Maroc. 🇲🇦\n\n"
-            "Comment puis-je vous aider aujourd'hui ?"
+            "Bonjour 👋 Bienvenue sur AidFinder ! Tu cherches une aide, une offre "
+            "d'emploi ou un accompagnement en particulier ?"
         )
 
     def _thanks_response(self) -> str:
         return (
-            "Avec plaisir ! 😊\n\n"
-            "N'hésitez pas si vous avez d'autres questions, "
-            "je suis là pour vous aider."
+            "Avec plaisir 😊 N'hésite pas si tu as d'autres questions, je suis là."
         )
 
     def _goodbye_response(self) -> str:
         return (
-            "Au revoir et bonne journée ! 😊\n\n"
-            "N'hésitez pas à revenir sur AidFinder "
-            "si vous avez besoin d'aide. À bientôt !"
+            "Au revoir et bonne journée 👋 Reviens quand tu veux sur AidFinder, "
+            "à bientôt !"
         )
 
     def _profile_response(self, profile: dict) -> str:
-        filled = {k: v for k, v in profile.items() if v}
-        missing = [
-            f for f in ["ville", "region", "niveau_etude",
-                        "statut_socio_pro", "age", "handicap"]
-            if not profile.get(f)
-        ]
-        msg = "Voici ce que je sais de vous :\n\n"
-        labels = {
-            "ville": "Ville", "region": "Région",
-            "niveau_etude": "Niveau d'étude",
-            "statut_socio_pro": "Situation",
-            "age": "Âge", "handicap": "Handicap",
-        }
-        for k, v in filled.items():
-            msg += f"• {labels.get(k, k)} : {v}\n"
-        if missing:
-            missing_labels = [labels.get(f, f) for f in missing]
-            msg += (
-                f"\nIl me manque : {', '.join(missing_labels)}.\n"
-                "Puis-je vous poser quelques questions pour mieux vous aider ?"
+        known = []
+        for key in ("ville", "region", "niveau_etude", "statut_socio_pro", "age", "handicap"):
+            value = profile.get(key)
+            if not value:
+                continue
+            if key == "handicap":
+                known.append("situation de handicap reconnue")
+            elif key == "age":
+                known.append(f"{value} ans")
+            elif key == "ville":
+                known.append(f"à {value}")
+            elif key == "region":
+                known.append(f"dans la région {value}")
+            elif key == "niveau_etude":
+                known.append(f"niveau {value}")
+            else:
+                known.append(str(value))
+        if not known:
+            return (
+                "Je ne connais pas encore ton profil 😊 Si tu veux, complète-le "
+                "dans la page Profil pour des recommandations plus précises."
             )
-        return msg
+        base = "Voici ce que je sais de toi : " + ", ".join(known) + "."
+        return (
+            f"{base} Tu peux compléter ton profil à tout moment pour "
+            "affiner les recommandations."
+        )
 
     def _recommendation_response(self, recommendations: list[dict]) -> str:
         shown = recommendations[:3]
@@ -328,19 +380,16 @@ class ConversationFallback:
         for i, reco in enumerate(shown, 1):
             link = reco.get("lien_officiel") or reco.get("url_officielle") or ""
             titre = reco.get("titre", "Offre disponible")
-            raisons = ", ".join(reco.get("raisons", [])[:2])
             score = reco.get("score_matching", 0)
-            ligne = f"{i}. **{titre}** — compatibilité {score}/100"
-            if raisons:
-                ligne += f" ({raisons})"
+            ligne = f"{i}. {titre} — compatibilité {score}/100"
             if link:
                 ligne += f"\n   🔗 {link}"
             lines.append(ligne)
         return (
-            "Voici des offres d'emploi marocaines disponibles qui correspondent "
-            f"à votre profil :\n\n{chr(10).join(lines)}\n\n"
-            "Cliquez sur « Consulter » pour accéder à l'offre officielle. "
-            "Souhaitez-vous plus de détails ou affiner la recherche ?"
+            "Voici des offres qui correspondent bien à ta recherche :\n\n"
+            f"{chr(10).join(lines)}\n\n"
+            "Clique sur « Consulter » pour accéder à l'offre officielle. "
+            "Tu veux affiner ou est-ce que ça te convient ?"
         )
 
 
@@ -417,6 +466,10 @@ class ResponseGenerator:
         dify_inputs = self._build_dify_inputs(
             system_prompt, decision, meta, history, recommendations
         )
+        logger.info("[GENERATE] Dify inputs — clés transmises: %s",
+                     ", ".join(sorted(dify_inputs.keys())))
+        logger.info("[GENERATE] system_prompt envoyé à Dify (%d caractères): %s...",
+                     len(system_prompt), system_prompt[:150].replace("\n", " "))
         
         # Get existing conversation_id if available
         conversation_id = self._get_conversation_id(meta)
@@ -440,6 +493,7 @@ class ResponseGenerator:
                     meta.dify_conversation_id = received_conversation_id
                 
                 logger.info("[GENERATE] Réponse Dify obtenue (%d caractères)", len(response))
+                logger.info("[CHAT] PROVIDER=DIFY")
                 return response
             logger.warning("[GENERATE] Dify a retourné une réponse vide")
         else:
@@ -448,6 +502,8 @@ class ResponseGenerator:
 
         # Fallback to conversation engine
         logger.warning("[GENERATE] UTILISATION DU FALLBACK — Dify indisponible ou réponse vide")
+        logger.info("[CHAT] PROVIDER=LOCAL_FALLBACK")
+        logger.info("[CHAT] USING_LOCAL_FALLBACK")
         return self.fallback.generate(decision, meta, history, recommendations)
 
     async def generate_stream(
@@ -471,6 +527,10 @@ class ResponseGenerator:
         dify_inputs = self._build_dify_inputs(
             system_prompt, decision, meta, history, recommendations
         )
+        logger.info("[STREAM] Dify inputs — clés transmises: %s",
+                     ", ".join(sorted(dify_inputs.keys())))
+        logger.info("[STREAM] system_prompt envoyé à Dify (%d caractères): %s...",
+                     len(system_prompt), system_prompt[:150].replace("\n", " "))
         
         # Get existing conversation_id if available
         conversation_id = self._get_conversation_id(meta)
@@ -510,10 +570,13 @@ class ResponseGenerator:
         
         if stream_failed or chunk_count == 0:
             logger.warning("[STREAM] Stream échoué ou vide — fallback")
+            logger.info("[CHAT] PROVIDER=LOCAL_FALLBACK")
+            logger.info("[CHAT] USING_LOCAL_FALLBACK")
             text = self.fallback.generate(decision, meta, history, recommendations)
             yield text
         else:
             logger.info("[STREAM] Stream terminé — %d chunks envoyés", chunk_count)
+            logger.info("[CHAT] PROVIDER=DIFY")
 
 # Singleton
 response_generator = ResponseGenerator()

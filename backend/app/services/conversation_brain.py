@@ -54,14 +54,14 @@ class IntentDetector:
             r"|quelles\s*infos|que\s*connais[-\s]tu)",
             re.I,
         ),
-        IntentCategory.ASK_BEST: re.compile(
-            r"(meilleur|mieux|top|priorité|le\s*plus\s*pertinent"
-            r"|la\s*plus\s*pertinente|lequel|laquelle|recommander)",
-            re.I,
-        ),
         IntentCategory.ASK_DETAILS: re.compile(
             r"(détail|précision|plus\s*d['\"]infos?|explique"
             r"|comment\s*ça\s*marche|en\s*savoir\s*plus|développe)",
+            re.I,
+        ),
+        IntentCategory.ASK_BEST: re.compile(
+            r"(meilleur|mieux|top|priorité|le\s*plus\s*pertinent"
+            r"|la\s*plus\s*pertinente|lequel|laquelle|recommander)",
             re.I,
         ),
         IntentCategory.THANKS: re.compile(
@@ -133,19 +133,18 @@ class ProfileCollector:
         ),
     }
 
+    # Questions courtes, une seule information demandée à la fois,
+    # registre naturel et chaleureux (« tu »).
     QUESTIONS: dict[str, str] = {
-        "ville": "Dans quelle ville habitez-vous ?",
-        "region": "Dans quelle région se trouve votre ville ?",
-        "niveau_etude": (
-            "Quel est votre niveau d'étude ?\n\n"
-            "Exemples : sans diplôme, bac, licence, master, doctorat"
-        ),
+        "ville": "Bien sûr 😊 Dans quelle ville ou région cherches-tu ?",
+        "region": "Et dans quelle région exactement ?",
+        "niveau_etude": "Quel est ton niveau d'étude ? (sans diplôme, bac, licence, master…)",
         "statut_socio_pro": (
-            "Quelle est votre situation actuelle ?\n\n"
-            "Exemples : étudiant, employé, demandeur d'emploi, indépendant, retraité"
+            "Tu es actuellement… étudiant, employé, demandeur d'emploi, "
+            "indépendant, autre ?"
         ),
-        "age": "Quel âge avez-vous ? (pour vérifier votre éligibilité aux aides)",
-        "handicap": "Avez-vous une situation de handicap reconnue ?",
+        "age": "Tu as quel âge ? (pour vérifier ton éligibilité aux aides)",
+        "handicap": "As-tu une situation de handicap reconnue ?",
     }
 
     SUGGESTIONS: dict[str, list[str]] = {
@@ -284,7 +283,29 @@ class ProfileCollector:
                 extracted[field] = match.group(1).strip().capitalize()
             else:
                 extracted[field] = match.group(0).strip().capitalize()
+
+        # Réponse simple à une question du bot : « Casablanca », « à Rabat »,
+        # « Rabat-Salé-Kénitra »… → on mémorise la ville/région connue.
+        if extracted.get("ville") is None:
+            place = self._extract_known_place(message)
+            if place:
+                field, value = place
+                if field == "ville" and extracted.get("ville") is None:
+                    extracted["ville"] = value
+                elif field == "region" and extracted.get("region") is None:
+                    extracted["region"] = value
         return extracted
+
+    def _extract_known_place(self, message: str) -> tuple[str, str] | None:
+        """Détecte une ville ou région marocaine connue, même sans préfixe."""
+        normalized = " " + " ".join(message.casefold().split()).strip(" .!?,;:") + " "
+        for ville in sorted(self.VILLE_TO_REGION, key=len, reverse=True):
+            if f" {ville} " in normalized:
+                return "ville", ville.title() if ville.isascii() else ville.capitalize()
+        for region in sorted(set(self.VILLE_TO_REGION.values()), key=len, reverse=True):
+            if f" {region} " in normalized:
+                return "region", region.title() if region.isascii() else region
+        return None
 
     def is_complete(self, profile: dict) -> bool:
         return all(
@@ -400,7 +421,19 @@ class ConversationBrain:
             IntentCategory.GOODBYE,
             IntentCategory.HELP,
         }
-        should_ask_question = bool(blocking_missing) and not social_intent
+        # Une question de profil n'est posée QUE lorsqu'une recherche concrète
+        # est en cours et qu'une information bloquante manque vraiment.
+        # Une demande vague (UNKNOWN, « je cherche autre chose ») ne déclenche
+        # JAMAIS de collecte de profil : le bot demande d'abord ce que cherche
+        # l'utilisateur, avec une question ouverte.
+        search_intent = intent in {
+            IntentCategory.SEARCH_JOB,
+            IntentCategory.SEARCH_STUDY,
+            IntentCategory.SEARCH_HOUSING,
+            IntentCategory.SEARCH_HEALTH,
+            IntentCategory.SEARCH_BUSINESS,
+        }
+        should_ask_question = bool(blocking_missing) and search_intent and not social_intent
 
         logger.info("[DECIDE] Résultat — intent=%s | new_state=%s | "
                      "extracted=%s | profil_complet=%s | bloquants_manquants=%s | field_to_ask=%s",
